@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+:root {
+    --background: #0a0f16;
+    --surface: #141d26;
+    --primary: #00e676;
+    --primary-dark: #00c853;
+    --secondary: #1f2a35;
+}
+
+@theme {
+    --color-background: var(--background);
+    --color-surface: var(--surface);
+    --color-primary: var(--primary);
+    --color-primary-dark: var(--primary-dark);
+    --color-secondary: var(--secondary);
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+    @apply bg-background text-white antialiased font-sans;
+}
+
+@layer components {
+    .glass-card {
+        @apply bg-surface/80 backdrop-blur-md border border-white/10 rounded-xl;
+    }
+
+    .btn-primary {
+        @apply bg-primary hover:bg-primary-dark text-background font-bold py-2 px-6 rounded-lg transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2;
+    }
+
+    .btn-outline {
+        @apply border border-primary text-primary hover:bg-primary/10 font-bold py-2 px-6 rounded-lg transition-all flex items-center justify-center gap-2;
+    }
+}
