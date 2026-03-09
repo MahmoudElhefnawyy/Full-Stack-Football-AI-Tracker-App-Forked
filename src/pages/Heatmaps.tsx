@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
+import { containerVariants, itemVariants, hoverScale, tapScale } from '../utils/animations';
 
 const Heatmaps = () => {
     const [selectedPlayer, setSelectedPlayer] = useState('Luca');
@@ -26,11 +28,18 @@ const Heatmaps = () => {
 
     const currentPlayer = playerData.find(p => p.name === selectedPlayer) || playerData[1];
 
-    const renderPitchGrid = () => (
-        <div className="relative w-full aspect-[1.6] bg-[#1a2d1d] border border-[#2a3f2d] rounded-xl overflow-hidden mt-4">
+    const renderPitchGrid = (color: string) => (
+        <div className="relative w-full aspect-[1.6] bg-[#0a0f16] border border-white/10 rounded-xl overflow-hidden mt-4">
             <div className="absolute inset-0 grid grid-cols-10 grid-rows-6 opacity-30">
                 {Array.from({ length: 60 }).map((_, i) => (
-                    <div key={i} className="border border-[#3a5a3d]" style={{ backgroundColor: `rgba(0, 200, 100, ${Math.random() * 0.4})` }}></div>
+                    <motion.div
+                        key={i}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: i * 0.01 }}
+                        className="border border-white/5"
+                        style={{ backgroundColor: color === 'green' ? `rgba(0, 200, 100, ${Math.random() * 0.4})` : `rgba(150, 150, 150, ${Math.random() * 0.4})` }}
+                    />
                 ))}
             </div>
             <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20 -translate-x-1/2" />
@@ -39,7 +48,7 @@ const Heatmaps = () => {
             <div className="absolute right-0 top-[20%] w-[15%] h-[60%] border border-white/20 border-r-0" />
             <div className="absolute bottom-2 right-4 text-[10px] font-bold text-white/30 flex gap-2 items-center">
                 <span>Low</span>
-                <div className="w-16 h-2 bg-gradient-to-r from-[#1a2d1d] to-primary rounded-full"></div>
+                <div className={`w-16 h-2 bg-gradient-to-r ${color === 'green' ? 'from-[#1a2d1d] to-[#00c968]' : 'from-[#1d252f] to-[#8495a7]'} rounded-full`}></div>
                 <span>High</span>
             </div>
         </div>
@@ -47,49 +56,55 @@ const Heatmaps = () => {
 
     return (
         <div className="container mx-auto px-4 py-32 max-w-7xl">
-            <div className="mb-8">
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="mb-8"
+            >
                 <h1 className="text-3xl font-bold text-white mb-2">Heatmaps & Visualization</h1>
                 <p className="text-[#8495a7] text-sm">Positional data and performance visualization for teams and players</p>
-            </div>
+            </motion.div>
 
-            <div className="flex gap-4 mb-8">
-                <button className="bg-primary text-[#0a0f16] px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="flex gap-4 mb-8"
+            >
+                <motion.button whileHover={hoverScale} whileTap={tapScale} className="bg-primary text-[#0a0f16] px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#0a0f16]"></span> FC Green Eagles
-                </button>
-                <button className="bg-[#0f151c] border border-white/10 text-white hover:bg-white/5 transition-colors px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+                </motion.button>
+                <motion.button whileHover={hoverScale} whileTap={tapScale} className="bg-[#0f151c] border border-white/10 text-white hover:bg-white/5 transition-colors px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#f59e0b]"></span> Black Panthers FC
-                </button>
-            </div>
+                </motion.button>
+            </motion.div>
 
             {/* Zone Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div className="bg-[#0f151c] border border-white/5 rounded-3xl p-6">
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"
+            >
+                <motion.div variants={itemVariants} className="bg-[#0f151c] border border-white/5 rounded-3xl p-6">
                     <h2 className="text-sm font-bold text-white mb-2">FC Green Eagles — Zone Activity</h2>
-                    {renderPitchGrid()}
-                </div>
-                <div className="bg-[#0f151c] border border-white/5 rounded-3xl p-6">
+                    {renderPitchGrid('green')}
+                </motion.div>
+                <motion.div variants={itemVariants} className="bg-[#0f151c] border border-white/5 rounded-3xl p-6">
                     <h2 className="text-sm font-bold text-white mb-2">Black Panthers FC — Zone Activity</h2>
-                    <div className="relative w-full aspect-[1.6] bg-[#1d252f] border border-[#2d3a47] rounded-xl overflow-hidden mt-4">
-                        <div className="absolute inset-0 grid grid-cols-10 grid-rows-6 opacity-30">
-                            {Array.from({ length: 60 }).map((_, i) => (
-                                <div key={i} className="border border-[#3d4a57]" style={{ backgroundColor: `rgba(150, 150, 150, ${Math.random() * 0.4})` }}></div>
-                            ))}
-                        </div>
-                        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20 -translate-x-1/2" />
-                        <div className="absolute left-1/2 top-1/2 w-[20%] h-[30%] border border-white/20 rounded-full -translate-x-1/2 -translate-y-1/2" />
-                        <div className="absolute left-0 top-[20%] w-[15%] h-[60%] border border-white/20 border-l-0" />
-                        <div className="absolute right-0 top-[20%] w-[15%] h-[60%] border border-white/20 border-r-0" />
-                        <div className="absolute bottom-2 right-4 text-[10px] font-bold text-white/30 flex gap-2 items-center">
-                            <span>Low</span>
-                            <div className="w-16 h-2 bg-gradient-to-r from-[#1d252f] to-[#8495a7] rounded-full"></div>
-                            <span>High</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                    {renderPitchGrid('gray')}
+                </motion.div>
+            </motion.div>
 
             {/* Player Attribute Comparison */}
-            <div className="bg-[#0f151c] border border-white/5 rounded-3xl p-6 mb-6 overflow-hidden">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                className="bg-[#0f151c] border border-white/5 rounded-3xl p-6 mb-6 overflow-hidden"
+            >
                 <h2 className="text-sm font-bold text-white mb-6">FC Green Eagles — Player Attribute Comparison</h2>
                 <div className="w-full h-64 -ml-4">
                     <ResponsiveContainer width="100%" height="100%">
@@ -111,27 +126,44 @@ const Heatmaps = () => {
                     <span className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#99ffcc] rounded-sm"></div> shooting</span>
                     <span className="flex items-center gap-1.5"><div className="w-2 h-2 bg-[#22aa66] rounded-sm"></div> passing</span>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Individual Player */}
-            <div className="bg-[#0f151c] border border-white/5 rounded-3xl p-6">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="bg-[#0f151c] border border-white/5 rounded-3xl p-6"
+            >
                 <h2 className="text-sm font-bold text-white mb-6">Individual Player Position Heatmap</h2>
 
-                <div className="flex flex-wrap gap-2 mb-8">
+                <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="flex flex-wrap gap-2 mb-8"
+                >
                     {playerData.map(p => (
-                        <button
+                        <motion.button
                             key={p.name}
+                            variants={itemVariants}
+                            whileHover={hoverScale}
+                            whileTap={tapScale}
                             onClick={() => setSelectedPlayer(p.name)}
                             className={`px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-colors border ${selectedPlayer === p.name ? 'bg-primary/20 border-primary text-primary' : 'bg-[#0a0f16] border-white/5 text-white/70 hover:text-white'}`}
                         >
                             <div className={`w-1.5 h-1.5 rounded-full ${selectedPlayer === p.name ? 'bg-primary' : 'bg-white/30'}`}></div>
                             {p.name} <span className="text-white/30">({p.position})</span>
-                        </button>
+                        </motion.button>
                     ))}
-                </div>
+                </motion.div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    <div>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        key={selectedPlayer + "-scatter"}
+                    >
                         <h3 className="text-[13px] font-bold text-white mb-6">Position Distribution — {currentPlayer.name}</h3>
                         <div className="w-full h-56 bg-[#0a0f16] border border-white/5 rounded-xl flex items-center justify-center -ml-2">
                             <ResponsiveContainer width="100%" height="100%">
@@ -146,9 +178,14 @@ const Heatmaps = () => {
                                 </ScatterChart>
                             </ResponsiveContainer>
                         </div>
-                    </div>
+                    </motion.div>
 
-                    <div>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ staggerChildren: 0.1 }}
+                        key={selectedPlayer + "-attributes"}
+                    >
                         <h3 className="text-[13px] font-bold text-white mb-6">Attribute Profile</h3>
                         <div className="space-y-4">
                             {[
@@ -157,19 +194,34 @@ const Heatmaps = () => {
                                 { name: 'Shooting', val: currentPlayer.shooting },
                                 { name: 'Passing', val: currentPlayer.passing },
                                 { name: 'Defending', val: currentPlayer.defending },
-                            ].map(attr => (
-                                <div key={attr.name}>
+                            ].map((attr, idx) => (
+                                <motion.div
+                                    key={attr.name}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                >
                                     <div className="flex justify-between text-[11px] font-bold text-white/70 mb-2">
                                         <span>{attr.name}</span>
                                         <span>{attr.val}/100</span>
                                     </div>
                                     <div className="h-2 bg-[#0a0f16] rounded-full overflow-hidden">
-                                        <div className="h-full bg-primary rounded-full" style={{ width: `${attr.val}%` }}></div>
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${attr.val}%` }}
+                                            transition={{ duration: 1, ease: "easeOut" }}
+                                            className="h-full bg-primary rounded-full"
+                                        ></motion.div>
                                     </div>
-                                </div>
+                                </motion.div>
                             ))}
                         </div>
-                        <div className="mt-8 bg-[#0a0f16] border border-white/5 rounded-xl p-4 text-[11px] font-bold text-white/50 flex flex-wrap gap-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.6 }}
+                            className="mt-8 bg-[#0a0f16] border border-white/5 rounded-xl p-4 text-[11px] font-bold text-white/50 flex flex-wrap gap-4"
+                        >
                             <span><span className="text-primary">Position:</span> {currentPlayer.position}</span>
                             <span>|</span>
                             <span><span className="text-primary">Overall:</span> {currentPlayer.overall}/10</span>
@@ -177,10 +229,10 @@ const Heatmaps = () => {
                             <span><span className="text-primary">Goals:</span> {currentPlayer.goals}</span>
                             <span>|</span>
                             <span><span className="text-primary">Assists:</span> {currentPlayer.assists}</span>
-                        </div>
-                    </div>
+                        </motion.div>
+                    </motion.div>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 };

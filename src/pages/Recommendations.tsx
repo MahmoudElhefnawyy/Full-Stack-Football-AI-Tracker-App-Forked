@@ -1,27 +1,39 @@
 import React from 'react';
 import { Share2, Download, TrendingUp, TrendingDown, Users, Lightbulb, Zap, Target, Flag, Star, ChevronRight, Activity, Shield } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { containerVariants, itemVariants, hoverScale, tapScale } from '../utils/animations';
 
 const Recommendations: React.FC = () => {
     return (
-        <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-12 py-32 animate-fade-in text-white">
+        <div className="max-w-7xl mx-auto px-6 md:px-10 lg:px-12 py-32 text-white">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
+            >
                 <div>
                     <h1 className="text-3xl font-bold text-white mb-2">Recommendations</h1>
                     <p className="text-[#8495a7] text-sm">AI-powered performance insights for FC Green Eagles</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-[#0d151c] hover:bg-[#15202b] border border-[#242e3a] rounded-lg text-sm font-medium transition-colors text-white">
+                    <motion.button whileHover={hoverScale} whileTap={tapScale} className="flex items-center gap-2 px-4 py-2 bg-[#0d151c] hover:bg-[#15202b] border border-[#242e3a] rounded-lg text-sm font-medium transition-colors text-white">
                         <Share2 className="w-4 h-4" /> Share
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-[#0d151c] hover:bg-[#15202b] border border-[#242e3a] rounded-lg text-sm font-medium transition-colors text-white">
+                    </motion.button>
+                    <motion.button whileHover={hoverScale} whileTap={tapScale} className="flex items-center gap-2 px-4 py-2 bg-[#0d151c] hover:bg-[#15202b] border border-[#242e3a] rounded-lg text-sm font-medium transition-colors text-white">
                         <Download className="w-4 h-4" /> PDF
-                    </button>
+                    </motion.button>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Top Performers Section */}
-            <section className="mb-8">
+            <motion.section
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                className="mb-8"
+            >
                 <div className="flex items-center gap-3 mb-4">
                     <TrendingUp className="w-5 h-5 text-green-500" />
                     <h2 className="text-xl font-bold text-white">Top Performers</h2>
@@ -31,7 +43,7 @@ const Recommendations: React.FC = () => {
                 </div>
                 <div className="bg-[#0b1016] border border-[#242e3a] rounded-2xl flex flex-col p-1">
                     {/* Player 1 */}
-                    <div className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
+                    <motion.div variants={itemVariants} className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center text-white font-bold text-lg">
                                 YT
@@ -58,13 +70,13 @@ const Recommendations: React.FC = () => {
                             <div className="flex items-center gap-1.5">
                                 <span className="font-bold text-green-400 text-lg">8.5</span>
                                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                <ChevronRight className="w-5 h-5 text-[#8495a7] opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
-                            <ChevronRight className="w-5 h-5 text-[#8495a7] opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Player 2 */}
-                    <div className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
+                    <motion.div variants={itemVariants} className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center text-white font-bold text-lg">
                                 MT
@@ -97,13 +109,13 @@ const Recommendations: React.FC = () => {
                             <div className="flex items-center gap-1.5">
                                 <span className="font-bold text-green-400 text-lg">8.7</span>
                                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                <ChevronRight className="w-5 h-5 text-[#8495a7] opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
-                            <ChevronRight className="w-5 h-5 text-[#8495a7] opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Player 3 */}
-                    <div className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
+                    <motion.div variants={itemVariants} className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center text-white font-bold text-lg">
                                 KA
@@ -133,13 +145,13 @@ const Recommendations: React.FC = () => {
                             <div className="flex items-center gap-1.5">
                                 <span className="font-bold text-green-400 text-lg">8.4</span>
                                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                <ChevronRight className="w-5 h-5 text-[#8495a7] opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
-                            <ChevronRight className="w-5 h-5 text-[#8495a7] opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Player 4 */}
-                    <div className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
+                    <motion.div variants={itemVariants} className="flex items-center justify-between p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center text-white font-bold text-lg">
                                 AV
@@ -172,16 +184,21 @@ const Recommendations: React.FC = () => {
                             <div className="flex items-center gap-1.5">
                                 <span className="font-bold text-yellow-500 text-lg">9.0</span>
                                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                                <ChevronRight className="w-5 h-5 text-[#8495a7] opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
-                            <ChevronRight className="w-5 h-5 text-[#8495a7] opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                    </div>
-
+                    </motion.div>
                 </div>
-            </section>
+            </motion.section>
 
             {/* Needs Improvement Section */}
-            <section className="mb-8">
+            <motion.section
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="mb-8"
+            >
                 <div className="flex items-center gap-3 mb-4">
                     <TrendingDown className="w-5 h-5 text-orange-500" />
                     <h2 className="text-xl font-bold text-white">Needs Improvement</h2>
@@ -190,7 +207,7 @@ const Recommendations: React.FC = () => {
                     </span>
                 </div>
                 <div className="bg-[#0b1016] border border-[#242e3a] rounded-2xl flex flex-col p-1">
-                    <div className="p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
+                    <motion.div variants={itemVariants} className="p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
                         <div className="flex items-start justify-between">
                             <div className="flex items-start gap-4">
                                 <div className="w-12 h-12 rounded-full bg-orange-900 border border-orange-700 flex items-center justify-center text-orange-100 font-bold text-lg mt-1">
@@ -221,18 +238,22 @@ const Recommendations: React.FC = () => {
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-1.5">
-                                    <span className="font-bold text-orange-400 text-lg">7.5</span>
-                                </div>
+                                <span className="font-bold text-orange-400 text-lg">7.5</span>
                                 <ChevronRight className="w-5 h-5 text-[#8495a7] opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
-            </section>
+            </motion.section>
 
             {/* Opposing Key Players to Watch Section */}
-            <section className="mb-8">
+            <motion.section
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="mb-8"
+            >
                 <div className="flex items-center gap-3 mb-4">
                     <Users className="w-5 h-5 text-blue-400" />
                     <h2 className="text-xl font-bold text-white">Opposing Key Players to Watch</h2>
@@ -242,7 +263,7 @@ const Recommendations: React.FC = () => {
                 </div>
                 <div className="bg-[#0b1016] border border-[#242e3a] rounded-2xl flex flex-col p-1">
                     {/* Opposing Player 1 */}
-                    <div className="p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
+                    <motion.div variants={itemVariants} className="p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                             <div className="flex items-start gap-4">
                                 <div className="w-12 h-12 rounded-full bg-blue-900 border border-blue-700 flex items-center justify-center text-blue-100 font-bold text-lg mt-1">
@@ -268,10 +289,10 @@ const Recommendations: React.FC = () => {
                                 <span className="font-bold text-yellow-500 text-lg">8.6</span>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Opposing Player 2 */}
-                    <div className="p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
+                    <motion.div variants={itemVariants} className="p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                             <div className="flex items-start gap-4">
                                 <div className="w-12 h-12 rounded-full bg-blue-900 border border-blue-700 flex items-center justify-center text-blue-100 font-bold text-lg mt-1">
@@ -297,10 +318,10 @@ const Recommendations: React.FC = () => {
                                 <span className="font-bold text-orange-400 text-lg">8.2</span>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Opposing Player 3 */}
-                    <div className="p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
+                    <motion.div variants={itemVariants} className="p-4 hover:bg-white/[0.02] transition-colors rounded-xl group cursor-pointer border-b border-[#242e3a] border-opacity-50 last:border-0 relative">
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                             <div className="flex items-start gap-4">
                                 <div className="w-12 h-12 rounded-full bg-blue-900 border border-blue-700 flex items-center justify-center text-blue-100 font-bold text-lg mt-1">
@@ -326,20 +347,29 @@ const Recommendations: React.FC = () => {
                                 <span className="font-bold text-yellow-500 text-lg">8.7</span>
                             </div>
                         </div>
-                    </div>
-
+                    </motion.div>
                 </div>
-            </section>
+            </motion.section>
 
             {/* Team Improvement Recommendations Section */}
-            <section className="mb-8">
+            <motion.section
+                variants={containerVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                className="mb-8"
+            >
                 <div className="flex items-center gap-3 mb-4">
                     <Lightbulb className="w-5 h-5 text-white" />
                     <h2 className="text-xl font-bold text-white">Team Improvement Recommendations</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Card 1 */}
-                    <div className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6 hover:border-white/20 transition-colors">
+                    <motion.div
+                        variants={itemVariants}
+                        whileHover={hoverScale}
+                        className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6 transition-colors"
+                    >
                         <div className="flex items-center gap-3 mb-3">
                             <Zap className="w-5 h-5 text-yellow-500" />
                             <h3 className="font-bold text-white">Improve Defensive Transitions</h3>
@@ -347,10 +377,14 @@ const Recommendations: React.FC = () => {
                         <p className="text-[#8495a7] text-sm leading-relaxed">
                             The backline is slow to recover after losing possession. Implement structured pressing to recover shape faster, especially in the second half.
                         </p>
-                    </div>
+                    </motion.div>
 
                     {/* Card 2 */}
-                    <div className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6 hover:border-white/20 transition-colors">
+                    <motion.div
+                        variants={itemVariants}
+                        whileHover={hoverScale}
+                        className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6 transition-colors"
+                    >
                         <div className="flex items-center gap-3 mb-3">
                             <Target className="w-5 h-5 text-pink-500" />
                             <h3 className="font-bold text-white">Increase Shot Conversion Rate</h3>
@@ -358,10 +392,14 @@ const Recommendations: React.FC = () => {
                         <p className="text-[#8495a7] text-sm leading-relaxed">
                             14 shots, only 3 goals. Work on clinical finishing drills and shooting under pressure. Utilize the flanks more effectively for crosses.
                         </p>
-                    </div>
+                    </motion.div>
 
                     {/* Card 3 */}
-                    <div className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6 hover:border-white/20 transition-colors">
+                    <motion.div
+                        variants={itemVariants}
+                        whileHover={hoverScale}
+                        className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6 transition-colors"
+                    >
                         <div className="flex items-center gap-3 mb-3">
                             <Shield className="w-5 h-5 text-blue-400" />
                             <h3 className="font-bold text-white">Better Ball Circulation</h3>
@@ -369,10 +407,14 @@ const Recommendations: React.FC = () => {
                         <p className="text-[#8495a7] text-sm leading-relaxed">
                             Too many long balls lost in midfield. Encourage short-passing triangles in the buildup phase to maintain possession and create better openings.
                         </p>
-                    </div>
+                    </motion.div>
 
                     {/* Card 4 */}
-                    <div className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6 hover:border-white/20 transition-colors">
+                    <motion.div
+                        variants={itemVariants}
+                        whileHover={hoverScale}
+                        className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6 transition-colors"
+                    >
                         <div className="flex items-center gap-3 mb-3">
                             <Flag className="w-5 h-5 text-white" />
                             <h3 className="font-bold text-white">Set-Piece Strategy</h3>
@@ -380,9 +422,9 @@ const Recommendations: React.FC = () => {
                         <p className="text-[#8495a7] text-sm leading-relaxed">
                             Capitalize on corner and free-kick situations more. Develop rehearsed routines based on opposition defensive weaknesses identified in this analysis.
                         </p>
-                    </div>
+                    </motion.div>
                 </div>
-            </section>
+            </motion.section>
         </div>
     );
 };

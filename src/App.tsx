@@ -1,7 +1,9 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import { AuthProvider } from './context/AuthContext';
+import PageTransition from './components/layout/PageTransition';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -20,33 +22,43 @@ import About from './pages/About';
 import Support from './pages/Support';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+        <Route path="/register" element={<PageTransition><RegisterPage /></PageTransition>} />
+        <Route path="/about" element={<PageTransition><About /></PageTransition>} />
+        <Route path="/help" element={<PageTransition><Support /></PageTransition>} />
+
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+          <Route path="/upload" element={<PageTransition><Upload /></PageTransition>} />
+          <Route path="/analysis/:id?" element={<PageTransition><MatchAnalysis /></PageTransition>} />
+          <Route path="/comparison" element={<PageTransition><Comparison /></PageTransition>} />
+          <Route path="/recommendations" element={<PageTransition><Recommendations /></PageTransition>} />
+          <Route path="/heatmaps/:id?" element={<PageTransition><Heatmaps /></PageTransition>} />
+          <Route path="/team/:id" element={<PageTransition><TeamDetails /></PageTransition>} />
+          <Route path="/player/:id" element={<PageTransition><PlayerProfile /></PageTransition>} />
+          <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
+        </Route>
+      </Routes>
+    </AnimatePresence>
+  );
+};
+
 const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen flex flex-col bg-background text-white selection:bg-primary selection:text-background">
+        <div className="min-h-screen flex flex-col bg-background text-white selection:bg-primary selection:text-background overflow-x-hidden">
           <Navbar />
           <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/help" element={<Support />} />
-
-              {/* Protected Routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/upload" element={<Upload />} />
-                <Route path="/analysis/:id?" element={<MatchAnalysis />} />
-                <Route path="/comparison" element={<Comparison />} />
-                <Route path="/recommendations" element={<Recommendations />} />
-                <Route path="/heatmaps/:id?" element={<Heatmaps />} />
-                <Route path="/team/:id" element={<TeamDetails />} />
-                <Route path="/player/:id" element={<PlayerProfile />} />
-                <Route path="/settings" element={<Settings />} />
-              </Route>
-            </Routes>
+            <AnimatedRoutes />
           </main>
           <Footer />
         </div>
@@ -56,3 +68,4 @@ const App: React.FC = () => {
 }
 
 export default App;
+
