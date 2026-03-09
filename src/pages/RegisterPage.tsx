@@ -1,83 +1,95 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Lock, ArrowRight, User, ShieldCheck, Check } from 'lucide-react';
+import { Mail, Lock, UserPlus, User } from 'lucide-react';
 
 const RegisterPage = () => {
     return (
-        <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-            <div className="w-full max-w-md">
-                <div className="glass-card p-8 md:p-10 relative overflow-hidden">
-                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 blur-3xl rounded-full" />
+        <div className="relative min-h-[80vh] flex items-center justify-center px-4 pt-28 pb-20 overflow-hidden">
+            {/* Dark green glow background */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 blur-[120px] rounded-full" />
+            </div>
 
-                    <div className="text-center mb-8">
-                        <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 mb-4">
-                            <ShieldCheck className="h-6 w-6 text-primary" />
+            <div className="w-full max-w-[420px] relative z-10 mt-6 md:mt-8">
+                <div className="bg-[#0f151c]/90 backdrop-blur-md p-10 rounded-[20px] border border-white/5 shadow-2xl">
+
+                    <div className="text-center mb-8 flex flex-col items-center">
+                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center mb-5 shadow-[0_0_15px_rgba(0,230,118,0.3)]">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 2L3 7V17L12 22L21 17V7L12 2Z" />
+                                <circle cx="12" cy="12" r="3" fill="white" />
+                                <path d="M12 2V6" />
+                                <path d="M12 18V22" />
+                                <path d="M4.5 16.5L7.5 14.5" />
+                                <path d="M16.5 9.5L19.5 7.5" />
+                                <path d="M16.5 14.5L19.5 16.5" />
+                                <path d="M4.5 7.5L7.5 9.5" />
+                            </svg>
                         </div>
-                        <h2 className="text-2xl font-bold">Create Account</h2>
-                        <p className="text-white/50 text-sm mt-1">Join SoccerNet and start analyzing</p>
+                        <h2 className="text-[22px] font-bold text-white tracking-tight">Create Account</h2>
+                        <p className="text-[#8495a7] text-[13px] mt-1.5">Join GoalSense and start analyzing</p>
                     </div>
 
-                    <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                    <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
                         <div className="space-y-4">
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold uppercase tracking-wider text-white/40 ml-1">Username</label>
-                                <div className="relative">
-                                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                                <label className="text-[12px] font-semibold text-white/80 ml-1">Username</label>
+                                <div className="relative group">
+                                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5e6b7e] group-focus-within:text-primary transition-colors" />
                                     <input
                                         type="text"
                                         placeholder="YourUsername"
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-sm focus:border-primary/50 focus:outline-none transition-colors"
+                                        className="w-full bg-[#0a0f16] border border-white/5 rounded-xl py-3.5 pl-11 pr-4 text-[13px] text-white placeholder:text-[#5e6b7e] focus:border-primary/50 focus:bg-[#0a0f16] focus:outline-none transition-all"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold uppercase tracking-wider text-white/40 ml-1">Email Address</label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                                <label className="text-[12px] font-semibold text-white/80 ml-1">Email Address</label>
+                                <div className="relative group">
+                                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5e6b7e] group-focus-within:text-primary transition-colors" />
                                     <input
                                         type="email"
                                         placeholder="you@example.com"
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-sm focus:border-primary/50 focus:outline-none transition-colors"
+                                        className="w-full bg-[#0a0f16] border border-white/5 rounded-xl py-3.5 pl-11 pr-4 text-[13px] text-white placeholder:text-[#5e6b7e] focus:border-primary/50 focus:bg-[#0a0f16] focus:outline-none transition-all"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-1.5">
-                                <label className="text-xs font-bold uppercase tracking-wider text-white/40 ml-1">Password</label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                                <label className="text-[12px] font-semibold text-white/80 ml-1">Password</label>
+                                <div className="relative group">
+                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5e6b7e] group-focus-within:text-primary transition-colors" />
                                     <input
                                         type="password"
-                                        placeholder="Min. 8 characters"
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-sm focus:border-primary/50 focus:outline-none transition-colors"
+                                        placeholder="Min. 6 characters"
+                                        className="w-full bg-[#0a0f16] border border-white/5 rounded-xl py-3.5 pl-11 pr-10 text-[13px] text-white placeholder:text-[#5e6b7e] focus:border-primary/50 focus:bg-[#0a0f16] focus:outline-none transition-all"
                                     />
-                                </div>
-                                <div className="flex gap-1 mt-1.5 px-1">
-                                    {[1, 2, 3, 4].map((i) => <div key={i} className="h-0.5 flex-grow bg-white/10 rounded-full" />)}
+                                    <button type="button" aria-label="Toggle password visibility" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-primary">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>
+                                    </button>
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold uppercase tracking-wider text-white/40 ml-1">Confirm Password</label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/30" />
+                            <div className="space-y-1.5 shadow-sm">
+                                <label className="text-[12px] font-semibold text-white/80 ml-1">Confirm Password</label>
+                                <div className="relative group">
+                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5e6b7e] group-focus-within:text-primary transition-colors" />
                                     <input
                                         type="password"
                                         placeholder="Repeat your password"
-                                        className="w-full bg-white/5 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-sm focus:border-primary/50 focus:outline-none transition-colors"
+                                        className="w-full bg-[#0a0f16] border border-white/5 rounded-xl py-3.5 pl-11 pr-4 text-[13px] text-white placeholder:text-[#5e6b7e] focus:border-primary/50 focus:bg-[#0a0f16] focus:outline-none transition-all"
                                     />
                                 </div>
                             </div>
                         </div>
 
-                        <button type="submit" className="btn-primary w-full h-12 text-sm">
-                            Create Account <ArrowRight className="h-4 w-4" />
+                        <button type="submit" className="w-full bg-primary hover:bg-[#00c968] text-black font-bold h-[46px] rounded-xl text-[14px] flex items-center justify-center gap-2 transition-colors mt-6">
+                            <UserPlus className="h-4 w-4" /> Create Account
                         </button>
                     </form>
 
-                    <p className="text-center text-sm text-white/40 mt-8">
-                        Already have an account? <Link to="/login" className="text-primary/70 hover:text-primary transition-colors font-medium">Sign In</Link>
+                    <p className="text-center text-[13px] text-[#8495a7] mt-6">
+                        Already have an account? <Link to="/login" className="text-primary hover:text-primary/80 transition-colors font-semibold">Sign In</Link>
                     </p>
                 </div>
             </div>

@@ -14,11 +14,22 @@
     --color-primary: var(--primary);
     --color-primary-dark: var(--primary-dark);
     --color-secondary: var(--secondary);
-    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "Roboto", "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
     @apply bg-background text-white antialiased font-sans;
+}
+
+/* Ensure interactive elements have a pointer cursor */
+a,
+button,
+[role="button"],
+select,
+input[type="submit"],
+input[type="reset"],
+input[type="button"] {
+    cursor: pointer;
 }
 
 @layer components {

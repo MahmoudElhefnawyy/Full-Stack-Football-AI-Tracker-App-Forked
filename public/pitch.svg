@@ -1,0 +1,66 @@
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00e676" stop-opacity="0.1" />
+      <stop offset="100%" stop-color="#0a0f16" stop-opacity="1" />
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-opacity="0.02" stroke-width="1"/>
+    </pattern>
+    <filter id="blur">
+      <feGaussianBlur stdDeviation="2"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="800" fill="url(#glow)" />
+  <rect width="1200" height="800" fill="url(#grid)" />
+
+  <g stroke="#00e676" stroke-opacity="0.15" stroke-width="2" fill="none">
+    <line x1="600" y1="0" x2="600" y2="800" />
+    <circle cx="600" cy="400" r="150" />
+    <circle cx="600" cy="400" r="4" fill="#00e676" fill-opacity="0.15" />
+    
+    <rect x="-10" y="200" width="250" height="400" />
+    <rect x="-10" y="300" width="100" height="200" />
+    <path d="M 240 300 A 100 100 0 0 1 240 500" />
+
+    <rect x="960" y="200" width="250" height="400" />
+    <rect x="1110" y="300" width="100" height="200" />
+    <path d="M 960 500 A 100 100 0 0 1 960 300" />
+  </g>
+
+  <!-- Player tracking markers -->
+  <g stroke="#00e676" stroke-width="1.5" fill="none">
+    <rect x="400" y="300" width="24" height="24" filter="url(#blur)" stroke-opacity="0.5"/>
+    <rect x="400" y="300" width="24" height="24" />
+    
+    <rect x="550" y="250" width="24" height="24" filter="url(#blur)" stroke-opacity="0.5"/>
+    <rect x="550" y="250" width="24" height="24" />
+    
+    <rect x="520" y="550" width="24" height="24" filter="url(#blur)" stroke-opacity="0.5"/>
+    <rect x="520" y="550" width="24" height="24" />
+    
+    <rect x="700" y="350" width="24" height="24" filter="url(#blur)" stroke-opacity="0.5"/>
+    <rect x="700" y="350" width="24" height="24" />
+    
+    <rect x="750" y="500" width="24" height="24" filter="url(#blur)" stroke-opacity="0.5"/>
+    <rect x="750" y="500" width="24" height="24" />
+    
+    <rect x="800" y="220" width="24" height="24" filter="url(#blur)" stroke-opacity="0.5"/>
+    <rect x="800" y="220" width="24" height="24" />
+
+    <line x1="424" y1="312" x2="550" y2="262" stroke-opacity="0.3" stroke-dasharray="4" />
+    <line x1="574" y1="262" x2="700" y2="362" stroke-opacity="0.3" stroke-dasharray="4" />
+    <line x1="544" y1="562" x2="750" y2="512" stroke-opacity="0.3" stroke-dasharray="4" />
+  </g>
+
+  <!-- Player nodes indicating motion tracking -->
+  <g fill="#00e676">
+    <circle cx="412" cy="312" r="4" />
+    <circle cx="562" cy="262" r="4" />
+    <circle cx="532" cy="562" r="4" />
+    <circle cx="712" cy="362" r="4" />
+    <circle cx="762" cy="512" r="4" />
+    <circle cx="812" cy="232" r="4" />
+  </g>
+</svg>
