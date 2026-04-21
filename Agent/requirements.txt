@@ -1,0 +1,11 @@
+# Core requirements for the AI Football Analysis Agent
+ultralytics
+supervision
+opencv-python-headless
+numpy
+matplotlib
+pandas
+celery
+redis
+sqlalchemy
+psycopg2-binary

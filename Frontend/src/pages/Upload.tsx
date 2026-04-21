@@ -28,42 +28,66 @@ const Upload = () => {
         }
     };
 
-    const handleUpload = () => {
+    const handleUpload = async () => {
         if (!file) return;
 
         setIsUploading(true);
         setStatusMessage('Starting upload...');
-        setUploadProgress(0);
+        setUploadProgress(10);
 
-        // Simulate upload orchestration
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += Math.floor(Math.random() * 10) + 5;
-            if (progress >= 100) {
-                progress = 100;
-                clearInterval(interval);
-                setStatusMessage('Analyzing match data with Computer Vision...');
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
 
-                // Simulate analysis delay
-                setTimeout(() => {
-                    setStatusMessage('Generating insights and heatmaps...');
-                    setTimeout(() => {
+            // 1. Upload Video
+            const response = await fetch('http://localhost:8000/api/v1/analysis/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) throw new Error('Upload failed');
+            
+            const data = await response.json();
+            const taskId = data.data.task_id;
+            
+            setUploadProgress(40);
+            setStatusMessage('Video received! AI is processing...');
+
+            // 2. Poll for Status
+            const pollInterval = setInterval(async () => {
+                try {
+                    const statusRes = await fetch(`http://localhost:8000/api/v1/analysis/tasks/${taskId}`);
+                    const statusData = await statusRes.json();
+                    const task = statusData.data;
+
+                    if (task.status === 'processing') {
+                        setUploadProgress(70);
+                        setStatusMessage('YOLOv8 is analyzing match frames...');
+                    } else if (task.status === 'success') {
+                        clearInterval(pollInterval);
+                        setUploadProgress(100);
                         setUploadComplete(true);
                         setIsUploading(false);
                         setStatusMessage('Analysis Complete!');
-
-                        // Redirect to dashboard after a short delay
+                        
                         setTimeout(() => {
-                            navigate('/dashboard');
+                            navigate(`/analysis/${taskId}`);
                         }, 1500);
-                    }, 2000);
-                }, 2000);
-            }
-            setUploadProgress(progress);
-            if (progress < 100) {
-                setStatusMessage(`Uploading video... ${progress}%`);
-            }
-        }, 300);
+                    } else if (task.status === 'failed') {
+                        clearInterval(pollInterval);
+                        setIsUploading(false);
+                        setStatusMessage(`Failed: ${task.error_message}`);
+                    }
+                } catch (err) {
+                    console.error('Polling error:', err);
+                }
+            }, 3000);
+
+        } catch (error) {
+            setIsUploading(false);
+            setStatusMessage('Error: Connection failed. Make sure the backend is running.');
+            console.error('Upload error:', error);
+        }
     };
 
     return (

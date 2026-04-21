@@ -53,6 +53,13 @@ def create_app() -> FastAPI:
     # ── Routes ──────────────────────────────────────────────────────────────
     app.include_router(api_router)
 
+    # ── Static Files ────────────────────────────────────────────────────────
+    from fastapi.staticfiles import StaticFiles
+    import os
+    media_path = os.path.abspath(settings.media_root)
+    os.makedirs(media_path, exist_ok=True)
+    app.mount("/api/v1/analysis/results", StaticFiles(directory=media_path), name="results")
+
     return app
 
 
