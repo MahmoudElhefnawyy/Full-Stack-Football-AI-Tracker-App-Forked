@@ -27,4 +27,4 @@ COPY . .
 ENV PYTHONPATH=/app:/app/football_analysis
 
 # Start the worker
-CMD ["python", "worker.py"]
+CMD ["python", "worker.py", "--concurrency=1"]
