@@ -39,8 +39,10 @@ const Upload = () => {
             const formData = new FormData();
             formData.append('file', file);
 
+            const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
             // 1. Upload Video
-            const response = await fetch('http://localhost:8000/api/v1/analysis/upload', {
+            const response = await fetch(`${BASE_URL}/api/v1/analysis/upload`, {
                 method: 'POST',
                 body: formData,
             });
@@ -56,7 +58,7 @@ const Upload = () => {
             // 2. Poll for Status
             const pollInterval = setInterval(async () => {
                 try {
-                    const statusRes = await fetch(`http://localhost:8000/api/v1/analysis/tasks/${taskId}`);
+                    const statusRes = await fetch(`${BASE_URL}/api/v1/analysis/tasks/${taskId}`);
                     const statusData = await statusRes.json();
                     const task = statusData.data;
 
