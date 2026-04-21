@@ -26,5 +26,8 @@ COPY . .
 # Set Python path
 ENV PYTHONPATH=/app:/app/football_analysis
 
-# Start the worker
-CMD ["python", "worker.py", "--concurrency=1"]
+# Set YOLO config dir to writable path
+ENV YOLO_CONFIG_DIR=/tmp
+
+# Start the worker using celery command to properly respect concurrency
+CMD ["celery", "-A", "worker.worker_app", "worker", "--loglevel=info", "--concurrency=1"]
