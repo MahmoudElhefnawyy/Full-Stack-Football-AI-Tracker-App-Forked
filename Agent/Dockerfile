@@ -24,7 +24,7 @@ COPY . .
 # so they are included in the COPY . . above.
 
 # Set Python path
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app:/app/football_analysis
 
 # Start the worker
 CMD ["python", "worker.py"]
