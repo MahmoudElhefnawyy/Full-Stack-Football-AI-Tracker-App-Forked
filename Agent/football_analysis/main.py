@@ -16,17 +16,18 @@ def run_analysis(input_video_path, output_video_path):
     # Initialize Tracker
     tracker = Tracker('models/best.pt')
 
+    print(f"Analyzing {len(video_frames)} frames...")
     tracks = tracker.get_object_tracks(video_frames,
-                                       read_from_stub=True,
-                                       stub_path='stubs/track_stubs.pkl')
+                                       read_from_stub=False) # MUST BE FALSE IN PRODUCTION
+    
     # Get object positions 
     tracker.add_position_to_tracks(tracks)
 
     # camera movement estimator
+    print("Estimating camera movement...")
     camera_movement_estimator = CameraMovementEstimator(video_frames[0])
     camera_movement_per_frame = camera_movement_estimator.get_camera_movement(video_frames,
-                                                                                read_from_stub=True,
-                                                                                stub_path='stubs/camera_movement_stub.pkl')
+                                                                                read_from_stub=False) # MUST BE FALSE IN PRODUCTION
     camera_movement_estimator.add_adjust_positions_to_tracks(tracks,camera_movement_per_frame)
 
 
@@ -42,6 +43,7 @@ def run_analysis(input_video_path, output_video_path):
     speed_and_distance_estimator.add_speed_and_distance_to_tracks(tracks)
 
     # Assign Player Teams
+    print("Assigning teams...")
     team_assigner = TeamAssigner()
     team_assigner.assign_team_color(video_frames[0], 
                                     tracks['players'][0])
@@ -56,6 +58,7 @@ def run_analysis(input_video_path, output_video_path):
 
     
     # Assign Ball Aquisition
+    print("Detecting ball possession...")
     player_assigner =PlayerBallAssigner()
     team_ball_control= []
     for frame_num, player_track in enumerate(tracks['players']):
