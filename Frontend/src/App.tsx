@@ -23,6 +23,7 @@ import Settings from './pages/Settings';
 import About from './pages/About';
 import Support from './pages/Support';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import NotFound from './pages/NotFound';
 
 const AnimatedRoutes = () => {
     const location = useLocation();
@@ -46,6 +47,9 @@ const AnimatedRoutes = () => {
                     <Route path="/player/:id" element={<PageTransition><PlayerProfile /></PageTransition>} />
                     <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
                 </Route>
+
+                {/* 404 catch-all */}
+                <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
             </Routes>
         </AnimatePresence>
     );
