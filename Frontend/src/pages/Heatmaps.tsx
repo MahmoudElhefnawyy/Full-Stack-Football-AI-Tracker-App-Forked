@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { containerVariants, itemVariants, hoverScale, tapScale } from '../utils/animations';
 import { api, type PlayerSummary, type PlayerHeatmap, type PlayerDetail } from '../services/api';
-import { Users, Map as MapIcon, Activity, Trophy, Loader2 as LucideLoader } from 'lucide-react';
+import { Users, Map as MapIcon, Activity, Trophy } from 'lucide-react';
+import BlurIn from '../components/ui/BlurIn';
+import GlassCard from '../components/ui/GlassCard';
+import SectionLabel from '../components/ui/SectionLabel';
+import StatCard from '../components/ui/StatCard';
 
 const Heatmaps = () => {
     const [players, setPlayers] = useState<PlayerSummary[]>([]);
@@ -13,204 +16,184 @@ const Heatmaps = () => {
     const [isDetailLoading, setIsDetailLoading] = useState(false);
 
     useEffect(() => {
-        const fetchPlayers = async () => {
-            try {
-                const data = await api.players.list();
-                setPlayers(data);
-                if (data.length > 0) {
-                    setSelectedPlayerId(data[0].id);
-                }
-            } catch (err) {
-                console.error("Players fetch error:", err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchPlayers();
+        api.players.list()
+            .then(data => { setPlayers(data); if (data.length > 0) setSelectedPlayerId(data[0].id); })
+            .catch(console.error)
+            .finally(() => setIsLoading(false));
     }, []);
 
     useEffect(() => {
-        const fetchPlayerDetail = async () => {
-            if (!selectedPlayerId) return;
-            setIsDetailLoading(true);
-            try {
-                const [detail, heat] = await Promise.all([
-                    api.players.get(selectedPlayerId),
-                    api.players.getHeatmap(selectedPlayerId)
-                ]);
-                setPlayerDetail(detail);
-                setHeatmap(heat);
-            } catch (err) {
-                console.error("Player detail fetch error:", err);
-            } finally {
-                setIsDetailLoading(false);
-            }
-        };
-        fetchPlayerDetail();
+        if (!selectedPlayerId) return;
+        setIsDetailLoading(true);
+        Promise.all([api.players.get(selectedPlayerId), api.players.getHeatmap(selectedPlayerId)])
+            .then(([detail, heat]) => { setPlayerDetail(detail); setHeatmap(heat); })
+            .catch(console.error)
+            .finally(() => setIsDetailLoading(false));
     }, [selectedPlayerId]);
 
-    const PitchGrid = ({ zones }: { zones?: { x: number, y: number, value: number }[] }) => {
-        // Create a 10x6 grid map
+    const PitchGrid = ({ zones }: { zones?: { x: number; y: number; value: number }[] }) => {
         const gridValues = Array(60).fill(0);
-        if (zones) {
-            zones.forEach(z => {
-                const index = Math.floor(z.y / 16.6) * 10 + Math.floor(z.x / 10);
-                if (index >= 0 && index < 60) gridValues[index] = z.value;
-            });
-        }
-
+        if (zones) zones.forEach(z => {
+            const index = Math.floor(z.y / 16.6) * 10 + Math.floor(z.x / 10);
+            if (index >= 0 && index < 60) gridValues[index] = z.value;
+        });
         return (
-            <div className="relative w-full aspect-[1.6] bg-[#0a0f16] border border-white/10 rounded-xl overflow-hidden mt-4">
-                <div className="absolute inset-0 grid grid-cols-10 grid-rows-6 opacity-40">
+            <div className="relative w-full aspect-[1.6] bg-background border border-border rounded-2xl overflow-hidden">
+                {/* Heat grid */}
+                <div className="absolute inset-0 grid grid-cols-10 grid-rows-6">
                     {gridValues.map((val, i) => (
                         <motion.div
                             key={i}
-                            className="border border-white/5 transition-colors"
-                            style={{ backgroundColor: `rgba(16, 185, 129, ${val / 100})` }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: i * 0.005 }}
+                            className="border border-white/3 transition-colors"
+                            style={{ backgroundColor: `rgba(0,230,118,${val / 100})` }}
                         />
                     ))}
                 </div>
-                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/20 -translate-x-1/2" />
-                <div className="absolute left-1/2 top-1/2 w-[20%] h-[30%] border border-white/20 rounded-full -translate-x-1/2 -translate-y-1/2" />
-                <div className="absolute left-0 top-[20%] w-[15%] h-[60%] border border-white/20 border-l-0" />
-                <div className="absolute right-0 top-[20%] w-[15%] h-[60%] border border-white/20 border-r-0" />
+                {/* Pitch markings */}
+                <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/15 -translate-x-1/2" />
+                    <div className="absolute left-1/2 top-1/2 w-[20%] h-[30%] border border-white/15 rounded-full -translate-x-1/2 -translate-y-1/2" />
+                    <div className="absolute left-0 top-[20%] w-[15%] h-[60%] border border-white/15 border-l-0" />
+                    <div className="absolute right-0 top-[20%] w-[15%] h-[60%] border border-white/15 border-r-0" />
+                </div>
             </div>
         );
     };
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0a0f16]">
-                <LucideLoader className="w-12 h-12 text-primary animate-spin" />
-            </div>
-        );
-    }
+    if (isLoading) return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+            <div className="h-10 w-10 rounded-full border-2 border-border border-t-primary animate-spin" />
+        </div>
+    );
 
-    if (players.length === 0) {
-        return (
-            <div className="max-w-7xl mx-auto px-6 py-32 text-center">
-                <div className="bg-[#0f151c] rounded-2xl p-12 border border-white/5">
-                    <Users className="h-16 w-16 text-white/10 mx-auto mb-6" />
-                    <h2 className="text-2xl font-bold text-white mb-2">No Tracking Data Available</h2>
-                    <p className="text-[#8495a7] mb-8">Upload and analyze a match to see player heatmaps and positional stats.</p>
-                </div>
-            </div>
-        );
-    }
+    if (players.length === 0) return (
+        <div className="max-w-7xl mx-auto px-6 py-32 text-center">
+            <GlassCard className="p-16">
+                <Users className="h-14 w-14 text-muted mx-auto mb-5" />
+                <h2 className="font-display font-black text-2xl text-foreground mb-2">No Tracking Data Available</h2>
+                <p className="text-muted text-sm">Upload and analyze a match to see player heatmaps and positional stats.</p>
+            </GlassCard>
+        </div>
+    );
 
     return (
-        <div className="container mx-auto px-4 py-32 max-w-7xl">
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="mb-8"
-            >
-                <h1 className="text-3xl font-bold text-white mb-2">Heatmaps & Visualization</h1>
-                <p className="text-[#8495a7] text-sm">Real-time positional data from AI analysis</p>
-            </motion.div>
+        <div className="max-w-7xl mx-auto px-6 md:px-10 py-32">
 
-            {/* Individual Player Section */}
-            <motion.div 
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="bg-[#0f151c] border border-white/5 rounded-3xl p-6 mb-6"
-            >
-                <div className="flex items-center gap-3 mb-6">
-                    <MapIcon className="w-5 h-5 text-primary" />
-                    <h2 className="text-sm font-bold text-white">Positional Activity</h2>
-                </div>
+            {/* Header */}
+            <BlurIn className="mb-12">
+                <SectionLabel number="00" path="~/heatmaps" className="mb-4" />
+                <h1 className="font-display font-black text-3xl md:text-4xl text-foreground mt-4">
+                    Heatmaps & <span className="text-primary">Visualization.</span>
+                </h1>
+                <p className="text-muted text-sm mt-2">Real-time positional data from AI tracking</p>
+            </BlurIn>
 
-                <div className="flex flex-wrap gap-2 mb-8">
-                    {players.map(p => (
-                        <motion.button
-                            key={p.id}
-                            variants={itemVariants}
-                            whileHover={hoverScale}
-                            whileTap={tapScale}
-                            onClick={() => setSelectedPlayerId(p.id)}
-                            className={`px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-colors border ${selectedPlayerId === p.id ? 'bg-primary/20 border-primary text-primary' : 'bg-[#0a0f16] border-white/5 text-white/70 hover:text-white'}`}
-                        >
-                            <div className={`w-1.5 h-1.5 rounded-full ${selectedPlayerId === p.id ? 'bg-primary' : 'bg-white/30'}`}></div>
-                            {p.name} <span className="text-white/30">({p.position})</span>
-                        </motion.button>
-                    ))}
-                </div>
+            {/* Player selector */}
+            <BlurIn delay={0.1}>
+                <GlassCard className="p-6 mb-6">
+                    <div className="flex items-center gap-2 mb-5">
+                        <MapIcon className="h-4 w-4 text-primary" />
+                        <SectionLabel number="01" path="~/positional-activity" />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {players.map(p => (
+                            <motion.button
+                                key={p.id}
+                                whileHover={{ scale: 1.04 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={() => setSelectedPlayerId(p.id)}
+                                className={[
+                                    'flex items-center gap-2 px-3 py-1.5 rounded-full text-[11px] font-bold transition-all duration-200 border',
+                                    selectedPlayerId === p.id
+                                        ? 'bg-primary/15 border-primary/40 text-primary'
+                                        : 'bg-surface-2 border-border text-muted hover:text-foreground',
+                                ].join(' ')}
+                            >
+                                <span className={`h-1.5 w-1.5 rounded-full ${selectedPlayerId === p.id ? 'bg-primary' : 'bg-muted/30'}`} />
+                                {p.name}
+                                <span className="text-muted/50">({p.position})</span>
+                            </motion.button>
+                        ))}
+                    </div>
+                </GlassCard>
+            </BlurIn>
 
-                <AnimatePresence mode="wait">
-                    {isDetailLoading ? (
-                        <div className="h-80 flex items-center justify-center">
-                            <LucideLoader className="w-8 h-8 text-primary animate-spin" />
-                        </div>
-                    ) : playerDetail && (
-                        <motion.div
-                            key={selectedPlayerId}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="grid grid-cols-1 lg:grid-cols-2 gap-12"
-                        >
-                            <div>
-                                <h3 className="text-[13px] font-bold text-white mb-4 flex items-center gap-2">
-                                    <Activity className="w-4 h-4 text-[#10b981]" /> 
-                                    Activity Heatmap — {playerDetail.name}
-                                </h3>
-                                <PitchGrid zones={heatmap?.points} />
-                                <div className="mt-4 flex justify-end items-center gap-2 text-[10px] font-bold text-white/30">
-                                    <span>Low Intensity</span>
-                                    <div className="w-16 h-1.5 bg-gradient-to-r from-primary/10 to-primary rounded-full"></div>
-                                    <span>High</span>
+            {/* Detail area */}
+            <AnimatePresence mode="wait">
+                {isDetailLoading ? (
+                    <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <GlassCard className="h-80 flex items-center justify-center">
+                            <div className="h-8 w-8 rounded-full border-2 border-border border-t-primary animate-spin" />
+                        </GlassCard>
+                    </motion.div>
+                ) : playerDetail && (
+                    <motion.div key={selectedPlayerId} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                            {/* Heatmap panel */}
+                            <GlassCard className="p-6">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Activity className="h-4 w-4 text-primary" />
+                                    <span className="font-mono text-[10px] text-primary uppercase tracking-widest">Activity Heatmap</span>
+                                    <span className="ml-auto font-display font-bold text-sm text-foreground">{playerDetail.name}</span>
                                 </div>
-                            </div>
+                                <PitchGrid zones={heatmap?.points} />
+                                <div className="mt-3 flex justify-end items-center gap-2 font-mono text-[10px] text-muted">
+                                    <span>Low</span>
+                                    <div className="w-20 h-1.5 bg-gradient-to-r from-primary/10 to-primary rounded-full" />
+                                    <span>High Intensity</span>
+                                </div>
+                            </GlassCard>
 
-                            <div>
-                                <h3 className="text-[13px] font-bold text-white mb-6 flex items-center gap-2">
-                                    <Trophy className="w-4 h-4 text-primary" />
-                                    Attribute Profile
-                                </h3>
-                                <div className="space-y-4">
+                            {/* Attribute profile */}
+                            <GlassCard className="p-6">
+                                <div className="flex items-center gap-2 mb-6">
+                                    <Trophy className="h-4 w-4 text-primary" />
+                                    <span className="font-mono text-[10px] text-primary uppercase tracking-widest">Attribute Profile</span>
+                                </div>
+
+                                <div className="space-y-4 mb-8">
                                     {Object.entries(playerDetail.attributes).map(([key, val], idx) => (
                                         <motion.div
                                             key={key}
-                                            initial={{ opacity: 0, x: 20 }}
+                                            initial={{ opacity: 0, x: 16 }}
                                             animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: idx * 0.05 }}
+                                            transition={{ delay: idx * 0.06 }}
                                         >
-                                            <div className="flex justify-between text-[11px] font-bold text-white/70 mb-2">
+                                            <div className="flex justify-between font-mono text-[10px] text-muted mb-1.5">
                                                 <span className="capitalize">{key}</span>
-                                                <span>{val}/100</span>
+                                                <span className="text-foreground">{val}/100</span>
                                             </div>
-                                            <div className="h-2 bg-[#0a0f16] rounded-full overflow-hidden">
+                                            <div className="h-1.5 bg-surface-2 rounded-full overflow-hidden">
                                                 <motion.div
                                                     initial={{ width: 0 }}
                                                     animate={{ width: `${val}%` }}
-                                                    transition={{ duration: 1, ease: "easeOut" }}
+                                                    transition={{ duration: 1, ease: 'easeOut', delay: idx * 0.06 }}
                                                     className="h-full bg-primary rounded-full"
-                                                ></motion.div>
+                                                />
                                             </div>
                                         </motion.div>
                                     ))}
                                 </div>
-                                
-                                <div className="mt-8 grid grid-cols-2 gap-4">
-                                    <div className="bg-[#0a0f16] border border-white/5 rounded-xl p-4">
-                                        <div className="text-[10px] text-[#8495a7] mb-1 font-bold uppercase">Pass Accuracy</div>
-                                        <div className="text-xl font-bold text-white">{Math.round(playerDetail.passAccuracy * 100)}%</div>
-                                    </div>
-                                    <div className="bg-[#0a0f16] border border-white/5 rounded-xl p-4">
-                                        <div className="text-[10px] text-[#8495a7] mb-1 font-bold uppercase">Minutes Played</div>
-                                        <div className="text-xl font-bold text-white">{playerDetail.minutesPlayed}'</div>
-                                    </div>
+
+                                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
+                                    <GlassCard className="p-4">
+                                        <StatCard value={`${Math.round(playerDetail.passAccuracy * 100)}%`} label="Pass Accuracy" />
+                                    </GlassCard>
+                                    <GlassCard className="p-4">
+                                        <StatCard value={`${playerDetail.minutesPlayed}'`} label="Minutes Played" />
+                                    </GlassCard>
                                 </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </motion.div>
+                            </GlassCard>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
 
 export default Heatmaps;
-

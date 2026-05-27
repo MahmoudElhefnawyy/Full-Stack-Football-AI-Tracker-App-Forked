@@ -1,12 +1,24 @@
 import { useRef, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Share2, Download, RefreshCcw, Clock, Calendar, Zap, Loader2 } from 'lucide-react';
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip } from 'recharts';
+import {
+    Share2, Download, RefreshCcw, Clock, Calendar,
+    Zap, Loader2
+} from 'lucide-react';
+import {
+    PieChart, Pie, Cell, BarChart, Bar,
+    XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip
+} from 'recharts';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { motion } from 'framer-motion';
-import { containerVariants, itemVariants, hoverScale, tapScale } from '../utils/animations';
+import { hoverScale, tapScale } from '../utils/animations';
 import { api, type MatchOverview } from '../services/api';
+import BlurIn from '../components/ui/BlurIn';
+import GlassCard from '../components/ui/GlassCard';
+import SectionLabel from '../components/ui/SectionLabel';
+import StatCard from '../components/ui/StatCard';
+
+const COLORS = ['#00e676', '#1e2d3a'];
 
 const MatchAnalysis = () => {
     const { id } = useParams<{ id: string }>();
@@ -15,41 +27,26 @@ const MatchAnalysis = () => {
     const [data, setData] = useState<MatchOverview | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    const COLORS = ['#10b981', '#334155'];
-
     useEffect(() => {
-        const fetchMatchData = async () => {
-            if (!id) return;
-            try {
-                const overview = await api.matches.getOverview(id);
-                setData(overview);
-            } catch (err) {
-                console.error("Match analysis fetch error:", err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchMatchData();
+        if (!id) return;
+        api.matches.getOverview(id)
+            .then(setData)
+            .catch(console.error)
+            .finally(() => setIsLoading(false));
     }, [id]);
 
-    interface ChartPayload {
-        name: string;
-        value: number | string;
-        fill?: string;
-        dataKey?: string;
-    }
+    interface ChartPayload { name: string; value: number | string; fill?: string; dataKey?: string; }
 
     const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: ChartPayload[]; label?: string }) => {
         if (active && payload && payload.length && data) {
             return (
-                <div className="bg-[#0f151c] border border-[#242e3a] p-3 rounded-lg shadow-xl">
-                    <p className="text-white font-medium mb-2">{label}</p>
+                <div className="bg-surface border border-border p-3 rounded-xl shadow-xl">
+                    <p className="text-foreground font-semibold text-xs mb-2">{label}</p>
                     {payload.map((p, i) => (
-                        <div key={i} className="flex items-center gap-2 mb-1 last:mb-0 text-sm">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: p.fill }}></div>
-                            <span className="text-[#a4b4c4]">{p.dataKey === 'home' ? data.homeTeam : data.awayTeam}:</span>
-                            <span className="text-white font-bold">{p.value}</span>
+                        <div key={i} className="flex items-center gap-2 text-xs">
+                            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.fill }} />
+                            <span className="text-muted">{p.dataKey === 'home' ? data.homeTeam : data.awayTeam}:</span>
+                            <span className="text-foreground font-bold">{p.value}</span>
                         </div>
                     ))}
                 </div>
@@ -63,237 +60,185 @@ const MatchAnalysis = () => {
         setIsExporting(true);
         try {
             const dataUrl = await toPng(pageRef.current, {
-                backgroundColor: '#0a0f16',
+                backgroundColor: '#080c10',
                 cacheBust: true,
-                filter: (node: HTMLElement) => {
-                    return node.getAttribute?.('data-html2canvas-ignore') !== 'true';
-                }
+                filter: (node: HTMLElement) => node.getAttribute?.('data-html2canvas-ignore') !== 'true',
             });
-
             const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
             const img = new Image();
             img.src = dataUrl;
-
-            await new Promise((resolve) => {
-                img.onload = resolve;
-            });
-
+            await new Promise(resolve => { img.onload = resolve; });
             const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (img.height * pdfWidth) / img.width;
-
-            pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, (img.height * pdfWidth) / img.width);
             pdf.save(`match-analysis-${id}.pdf`);
-        } catch (error) {
-            console.error("Error exporting PDF:", error);
-        } finally {
-            setIsExporting(false);
-        }
+        } catch (e) { console.error(e); } finally { setIsExporting(false); }
     };
 
     const handleShare = async () => {
         if (!data) return;
         const shareData = {
-            title: `Match Analysis - ${data.homeTeam} vs ${data.awayTeam}`,
+            title: `Match Analysis — ${data.homeTeam} vs ${data.awayTeam}`,
             text: 'Check out this AI-powered match analysis!',
             url: window.location.href,
         };
-
         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-            try {
-                await navigator.share(shareData);
-            } catch (error) {
-                console.log('Error sharing', error);
-            }
+            try { await navigator.share(shareData); } catch { /* user cancelled */ }
         } else {
             navigator.clipboard.writeText(window.location.href);
-            alert("Link copied to clipboard!");
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0a0f16]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
+    if (isLoading) return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+            <div className="h-10 w-10 rounded-full border-2 border-border border-t-primary animate-spin" />
+        </div>
+    );
 
-    if (!data) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0a0f16] text-white">
-                <p>Match analysis data not found.</p>
-            </div>
-        );
-    }
+    if (!data) return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+            <GlassCard className="p-12 text-center max-w-sm">
+                <p className="text-muted text-sm">Match analysis data not found.</p>
+            </GlassCard>
+        </div>
+    );
 
     const pieData = [
         { name: data.homeTeam, value: data.possession[data.homeTeam] || 50 },
         { name: data.awayTeam, value: data.possession[data.awayTeam] || 50 },
     ];
 
+    const statCards = [
+        {
+            label: 'Ball Possession',
+            icon: <span className="h-2.5 w-2.5 rounded-full bg-primary" />,
+            home: `${data.possession[data.homeTeam]}%`,
+            away: `${data.possession[data.awayTeam]}%`,
+            homePct: data.possession[data.homeTeam],
+            awayPct: data.possession[data.awayTeam],
+        },
+        {
+            label: 'Pass Accuracy',
+            icon: <Zap className="h-3.5 w-3.5 text-primary" />,
+            home: `${Math.round((data.passAccuracy[data.homeTeam] || 0) * 100)}%`,
+            away: `${Math.round((data.passAccuracy[data.awayTeam] || 0) * 100)}%`,
+            homePct: Math.round((data.passAccuracy[data.homeTeam] || 0) * 100),
+            awayPct: Math.round((data.passAccuracy[data.awayTeam] || 0) * 100),
+        },
+    ];
+
     return (
-        <div ref={pageRef} className="max-w-7xl mx-auto px-6 md:px-10 lg:px-12 py-32 text-white bg-[#0a0f16]">
+        <div ref={pageRef} className="max-w-7xl mx-auto px-6 md:px-10 py-32">
+
             {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
-            >
+            <BlurIn className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Match Analysis</h1>
-                    <p className="text-[#8495a7] text-sm">AI-powered performance breakdown</p>
+                    <SectionLabel number="00" path="~/match-analysis" className="mb-4" />
+                    <h1 className="font-display font-black text-3xl md:text-4xl text-foreground mt-4">
+                        Match <span className="text-primary">Analysis.</span>
+                    </h1>
+                    <p className="text-muted text-sm mt-2">AI-powered performance breakdown · {data.date}</p>
                 </div>
                 <div className="flex items-center gap-3" data-html2canvas-ignore="true">
-                    <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={handleShare} className="flex items-center gap-2 px-4 py-2 bg-[#0d151c] hover:bg-[#15202b] border border-[#242e3a] rounded-lg text-sm font-medium transition-colors text-white">
-                        <Share2 className="w-4 h-4" /> Share
+                    <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={handleShare} className="btn-ghost h-9 px-4 text-xs border border-border hover:border-primary/30">
+                        <Share2 className="h-3.5 w-3.5" /> Share
                     </motion.button>
-                    <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={handleExportPDF} disabled={isExporting} className="flex items-center gap-2 px-4 py-2 bg-[#0d151c] hover:bg-[#15202b] border border-[#242e3a] rounded-lg text-sm font-medium transition-colors text-[#10b981] disabled:opacity-50">
-                        {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                        {isExporting ? 'Exporting...' : 'PDF'}
+                    <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={handleExportPDF} disabled={isExporting} className="btn-ghost h-9 px-4 text-xs border border-border hover:border-primary/30 disabled:opacity-50">
+                        {isExporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                        {isExporting ? 'Exporting…' : 'PDF'}
                     </motion.button>
                 </div>
-            </motion.div>
+            </BlurIn>
 
-            {/* Scoreboard Banner */}
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-8 mb-6 relative overflow-hidden flex flex-col items-center justify-center min-h-[160px]"
-            >
-                {/* Background Glow */}
-                <motion.div
-                    animate={{
-                        opacity: [0.1, 0.15, 0.1],
-                        scale: [1, 1.1, 1],
-                    }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-1/2 left-1/2 w-full max-w-[800px] h-64 bg-[#10b981]/10 rounded-full blur-[100px] -translate-y-1/2 -translate-x-1/2 pointer-events-none"
-                ></motion.div>
-
-                <div className="absolute top-6 right-8 text-xs font-semibold text-[#8495a7] flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5" /> {data.date}
-                </div>
-
-                <div className="flex justify-between items-center w-full max-w-2xl relative z-10 mt-2">
-                    {/* Home Team */}
+            {/* Scoreboard */}
+            <BlurIn delay={0.1} className="mb-6">
+                <GlassCard className="p-8 relative overflow-hidden flex flex-col items-center justify-center min-h-[160px]">
+                    {/* Ambient glow */}
                     <motion.div
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="flex flex-col items-center flex-1"
-                    >
-                        <div className="w-16 h-16 bg-[#15202b] border border-[#242e3a] rounded-2xl flex items-center justify-center mb-3">
-                            <span className="text-3xl">🦅</span>
-                        </div>
-                        <span className="text-sm font-bold text-white text-center">{data.homeTeam}</span>
-                    </motion.div>
-
-                    {/* Score */}
-                    <div className="flex flex-col items-center flex-1">
-                        <motion.div
-                            initial={{ y: 20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            transition={{ delay: 0.5, type: "spring" }}
-                            className="flex items-center justify-center gap-4 text-5xl md:text-6xl font-black text-white mb-2 tracking-tight"
-                        >
-                            <span>{data.homeScore}</span>
-                            <span className="text-[#334155] font-light mx-1">-</span>
-                            <span>{data.awayScore}</span>
-                            <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                            >
-                                <RefreshCcw className="w-6 h-6 text-white ml-2" />
-                            </motion.div>
-                        </motion.div>
-                        <div className="flex items-center gap-1.5 text-xs font-semibold text-[#8495a7]">
-                            <Clock className="w-3.5 h-3.5" /> Full Time
-                        </div>
+                        animate={{ opacity: [0.08, 0.14, 0.08], scale: [1, 1.08, 1] }}
+                        transition={{ duration: 5, repeat: Infinity }}
+                        className="absolute top-1/2 left-1/2 w-full max-w-[600px] h-48 bg-primary/20 rounded-full blur-[100px] -translate-y-1/2 -translate-x-1/2 pointer-events-none"
+                    />
+                    <div className="absolute top-5 right-6 flex items-center gap-1.5 font-mono text-[10px] text-muted">
+                        <Calendar className="h-3 w-3" /> {data.date}
                     </div>
 
-                    {/* Away Team */}
-                    <motion.div
-                        initial={{ x: 20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="flex flex-col items-center flex-1"
-                    >
-                        <div className="w-16 h-16 bg-[#15202b] border border-[#242e3a] rounded-2xl flex items-center justify-center mb-3">
-                            <span className="text-3xl">🐆</span>
-                        </div>
-                        <span className="text-sm font-bold text-[#e2e8f0] text-center">{data.awayTeam}</span>
-                    </motion.div>
-                </div>
-            </motion.div>
-
-            {/* Tabs */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                className="flex gap-3 mb-6"
-            >
-                <motion.button whileHover={hoverScale} whileTap={tapScale} className="bg-[#10b981] hover:bg-[#059669] text-[#0a0f16] px-5 py-2 rounded-lg text-sm font-bold transition-colors">
-                    Overview
-                </motion.button>
-            </motion.div>
-
-            {/* Top Stat Bars */}
-            <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"
-            >
-                {[
-                    { label: 'Ball Possession', icon: <div className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></div>, home: data.possession[data.homeTeam], away: data.possession[data.awayTeam], unit: '%', isPercentage: true, max: 100 },
-                    { label: 'Pass Accuracy', icon: <Zap className="w-3.5 h-3.5 text-[#10b981]" />, home: Math.round((data.passAccuracy[data.homeTeam] || 0) * 100), away: Math.round((data.passAccuracy[data.awayTeam] || 0) * 100), unit: '%', isPercentage: true, max: 100 },
-                ].map(stat => {
-                    const homePercent = stat.isPercentage ? stat.home : (stat.home / (stat.max || 1)) * 100;
-                    const awayPercent = stat.isPercentage ? stat.away : (stat.away / (stat.max || 1)) * 100;
-
-                    return (
-                        <motion.div variants={itemVariants} key={stat.label} className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-5">
-                            <div className="text-xs font-semibold text-[#8495a7] mb-4 flex items-center gap-2">
-                                {stat.icon} {stat.label}
-                            </div>
-                            <div className="flex justify-between items-end mb-3">
-                                <span className="text-2xl font-bold text-white leading-none">{stat.home}{stat.unit}</span>
-                                <span className="text-xl font-bold text-[#8495a7] leading-none">{stat.away}{stat.unit}</span>
-                            </div>
-                            <div className="flex gap-1.5 h-1.5 w-full">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${homePercent}%` }}
-                                    transition={{ duration: 1, delay: 1 }}
-                                    className="h-full bg-[#10b981] rounded-full"
-                                ></motion.div>
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${awayPercent}%` }}
-                                    transition={{ duration: 1, delay: 1.2 }}
-                                    className="h-full bg-[#334155] rounded-full"
-                                ></motion.div>
-                            </div>
+                    <div className="flex justify-between items-center w-full max-w-lg relative z-10">
+                        {/* Home */}
+                        <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="flex flex-col items-center flex-1">
+                            <div className="h-16 w-16 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-center mb-3 text-3xl">🦅</div>
+                            <span className="text-sm font-bold text-foreground text-center">{data.homeTeam}</span>
+                            <span className="font-mono text-[9px] text-primary uppercase tracking-widest mt-1">Home</span>
                         </motion.div>
-                    );
-                })}
-            </motion.div>
 
-            {/* Charts Area */}
-            <motion.div
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-                className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"
-            >
-                {/* Ball Possession Donut */}
-                <motion.div variants={itemVariants} className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6 flex flex-col">
-                    <h3 className="font-bold text-white mb-6">Ball Possession</h3>
+                        {/* Score */}
+                        <div className="flex flex-col items-center flex-1">
+                            <motion.div
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.5, type: 'spring' }}
+                                className="flex items-center gap-4 font-display font-black text-5xl md:text-6xl text-foreground tracking-tight mb-2"
+                            >
+                                <span>{data.homeScore}</span>
+                                <span className="text-muted font-light text-4xl">—</span>
+                                <span>{data.awayScore}</span>
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                                    className="ml-1"
+                                >
+                                    <RefreshCcw className="h-5 w-5 text-primary/40" />
+                                </motion.div>
+                            </motion.div>
+                            <div className="flex items-center gap-1.5 font-mono text-[10px] text-muted">
+                                <Clock className="h-3 w-3" /> Full Time · {data.status}
+                            </div>
+                        </div>
+
+                        {/* Away */}
+                        <motion.div initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="flex flex-col items-center flex-1">
+                            <div className="h-16 w-16 bg-surface-2 border border-border rounded-2xl flex items-center justify-center mb-3 text-3xl">🐆</div>
+                            <span className="text-sm font-bold text-muted text-center">{data.awayTeam}</span>
+                            <span className="font-mono text-[9px] text-muted uppercase tracking-widest mt-1">Away</span>
+                        </motion.div>
+                    </div>
+                </GlassCard>
+            </BlurIn>
+
+            {/* Stat bars */}
+            <BlurIn delay={0.15} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {statCards.map((s, i) => (
+                    <GlassCard key={s.label} className="p-5">
+                        <div className="flex items-center gap-2 mb-4">
+                            {s.icon}
+                            <span className="font-mono text-[10px] text-muted uppercase tracking-widest">{s.label}</span>
+                        </div>
+                        <div className="flex justify-between items-end mb-3">
+                            <span className="font-display font-black text-2xl text-foreground">{s.home}</span>
+                            <span className="font-display font-bold text-xl text-muted">{s.away}</span>
+                        </div>
+                        <div className="flex gap-1.5 h-1.5 w-full">
+                            <motion.div initial={{ width: 0 }} animate={{ width: `${s.homePct}%` }} transition={{ duration: 1, delay: 0.8 + i * 0.1 }} className="h-full bg-primary rounded-full" />
+                            <motion.div initial={{ width: 0 }} animate={{ width: `${s.awayPct}%` }} transition={{ duration: 1, delay: 1 + i * 0.1 }} className="h-full bg-border rounded-full" />
+                        </div>
+                    </GlassCard>
+                ))}
+            </BlurIn>
+
+            {/* Summary stat row */}
+            <BlurIn delay={0.2} className="flex gap-10 py-8 px-2 border-y border-border mb-8">
+                <StatCard value={`${data.possession[data.homeTeam]}%`} label="Possession" glowing />
+                <StatCard value={String(data.homeScore + data.awayScore)} label="Total Goals" />
+                <StatCard value={`${Math.round((data.passAccuracy[data.homeTeam] || 0) * 100)}%`} label="Home Pass Acc." />
+            </BlurIn>
+
+            {/* Charts grid */}
+            <BlurIn delay={0.25} className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+                {/* Possession donut */}
+                <GlassCard className="p-6 flex flex-col">
+                    <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-6">Ball Possession</p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6 flex-1">
-                        <div className="w-32 h-32 relative">
+                        <div className="w-32 h-32 relative shrink-0">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
@@ -305,8 +250,8 @@ const MatchAnalysis = () => {
                                         stroke="none"
                                         startAngle={90}
                                         endAngle={-270}
-                                        animationBegin={1500}
-                                        animationDuration={1500}
+                                        animationBegin={800}
+                                        animationDuration={1200}
                                     >
                                         {pieData.map((_, index) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -316,37 +261,41 @@ const MatchAnalysis = () => {
                             </ResponsiveContainer>
                         </div>
                         <div className="flex flex-col gap-3">
-                            <div className="flex items-center gap-2 text-xs font-medium text-white">
-                                <div className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></div>
-                                <span className="w-28 text-[#e2e8f0] truncate">{data.homeTeam}</span>
-                                <span className="text-[#10b981] font-bold">{data.possession[data.homeTeam]}%</span>
+                            <div className="flex items-center gap-2 text-xs font-medium text-foreground">
+                                <div className="w-2 h-2 rounded-full bg-primary" />
+                                <span className="w-28 truncate">{data.homeTeam}</span>
+                                <span className="text-primary font-bold">{data.possession[data.homeTeam]}%</span>
                             </div>
-                            <div className="flex items-center gap-2 text-xs font-medium text-[#8495a7]">
-                                <div className="w-2.5 h-2.5 rounded-full bg-[#334155]"></div>
+                            <div className="flex items-center gap-2 text-xs font-medium text-muted">
+                                <div className="w-2 h-2 rounded-full bg-border" />
                                 <span className="w-28 truncate">{data.awayTeam}</span>
-                                <span className="text-[#8495a7] font-bold">{data.possession[data.awayTeam]}%</span>
+                                <span className="font-bold">{data.possession[data.awayTeam]}%</span>
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </GlassCard>
 
-                {/* Match Statistics Bar Chart */}
-                <motion.div variants={itemVariants} className="lg:col-span-2 bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6">
-                    <h3 className="font-bold text-white mb-6">Match Statistics</h3>
-                    <div className="w-full h-[240px]">
+                {/* Match stats horizontal bar chart */}
+                <GlassCard className="lg:col-span-2 p-6">
+                    <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-6">Match Statistics</p>
+                    <div className="h-[240px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={data.stats} layout="vertical" margin={{ top: 0, right: 20, left: 10, bottom: 0 }} barGap={2} barCategoryGap={16}>
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#242e3a" />
-                                <XAxis type="number" stroke="#8495a7" fontSize={11} tickMargin={10} axisLine={false} tickLine={false} />
-                                <YAxis dataKey="name" type="category" stroke="#8495a7" fontSize={11} axisLine={false} tickLine={false} tickMargin={20} />
-                                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#1e293b', opacity: 0.4 }} />
-                                <Bar dataKey="home" fill="#10b981" radius={[0, 4, 4, 0]} barSize={8} />
-                                <Bar dataKey="away" fill="#334155" radius={[0, 4, 4, 0]} barSize={8} />
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
+                                <XAxis type="number" stroke="transparent" tick={{ fill: 'var(--color-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                                <YAxis dataKey="name" type="category" stroke="transparent" tick={{ fill: 'var(--color-muted)', fontSize: 10 }} axisLine={false} tickLine={false} tickMargin={16} />
+                                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                                <Bar dataKey="home" fill="#00e676" radius={[0, 4, 4, 0]} barSize={7} />
+                                <Bar dataKey="away" fill="#1e2d3a" radius={[0, 4, 4, 0]} barSize={7} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
-                </motion.div>
-            </motion.div>
+                    <div className="flex items-center gap-6 mt-4 justify-center">
+                        <span className="flex items-center gap-2 font-mono text-[10px] text-muted"><span className="h-2 w-2 rounded-sm bg-primary" />{data.homeTeam}</span>
+                        <span className="flex items-center gap-2 font-mono text-[10px] text-muted"><span className="h-2 w-2 rounded-sm bg-border" />{data.awayTeam}</span>
+                    </div>
+                </GlassCard>
+            </BlurIn>
         </div>
     );
 };

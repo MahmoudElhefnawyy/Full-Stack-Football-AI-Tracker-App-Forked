@@ -1,116 +1,143 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, LogIn, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { api } from '../services/api';
-import toast from 'react-hot-toast';
+import BlurIn from '../components/ui/BlurIn';
+import GlassCard from '../components/ui/GlassCard';
+import SectionLabel from '../components/ui/SectionLabel';
 
 const LoginPage = () => {
     const navigate = useNavigate();
     const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [showPass, setShowPass] = useState(false);
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleLogin = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
+        setError('');
+        setLoading(true);
         try {
-            const response = await api.auth.login({ email, password });
-            login(response);
-            toast.success('Login successful!');
+            const tokenResponse = await api.auth.login({ email, password });
+            login(tokenResponse);
             navigate('/dashboard');
-        } catch (err) {
-            console.error("Login error:", err);
-            // Error is already toasted by api.request
+        } catch (err: any) {
+            setError(err?.message || 'Invalid credentials. Please try again.');
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
     };
 
     return (
-        <div className="relative min-h-[80vh] flex items-center justify-center px-4 pt-28 pb-20 overflow-hidden">
-            {/* Dark green glow background */}
-            <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 blur-[120px] rounded-full" />
+        <div className="relative min-h-screen flex items-center justify-center px-6 pt-24 pb-16 bg-background overflow-hidden">
+            {/* Background glow */}
+            <div className="pointer-events-none absolute inset-0 z-0">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px]" />
+                <div className="dot-grid absolute inset-0" />
             </div>
 
-            <div className="w-full max-w-[420px] relative z-10 mt-6 md:mt-8">
-                <div className="bg-[#0f151c]/90 backdrop-blur-md p-10 rounded-[20px] border border-white/5 shadow-2xl">
+            {/* Corner markers */}
+            <span aria-hidden className="corner-marker top-24 left-6 z-10">+</span>
+            <span aria-hidden className="corner-marker top-24 right-6 z-10">+</span>
+            <span aria-hidden className="corner-marker bottom-8 left-6 z-10">+</span>
+            <span aria-hidden className="corner-marker bottom-8 right-6 z-10">+</span>
 
-                    <div className="text-center mb-8 flex flex-col items-center">
-                        <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center mb-5 shadow-[0_0_15px_rgba(0,230,118,0.3)]">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 2L3 7V17L12 22L21 17V7L12 2Z" />
-                                <circle cx="12" cy="12" r="3" fill="white" />
-                                <path d="M12 2V6" />
-                                <path d="M12 18V22" />
-                                <path d="M4.5 16.5L7.5 14.5" />
-                                <path d="M16.5 9.5L19.5 7.5" />
-                                <path d="M16.5 14.5L19.5 16.5" />
-                                <path d="M4.5 7.5L7.5 9.5" />
-                            </svg>
-                        </div>
-                        <h2 className="text-[22px] font-bold text-white tracking-tight">Welcome Back</h2>
-                        <p className="text-[#8495a7] text-[13px] mt-1.5">Sign in to your GoalSense account</p>
-                    </div>
+            <div className="relative z-10 w-full max-w-md">
+                <BlurIn className="mb-10 text-center">
+                    <SectionLabel number="01" path="~/auth/login" className="justify-center mb-6" />
+                    <h1 className="font-display font-black text-4xl md:text-5xl text-foreground mt-4">
+                        Welcome <span className="text-primary">Back.</span>
+                    </h1>
+                    <p className="text-muted text-sm mt-3">Sign in to access your analytics dashboard.</p>
+                </BlurIn>
 
-                    <form className="space-y-5" onSubmit={handleLogin}>
-                        {/* Demo Account Indicator */}
-                        <div className="px-4 py-3 rounded-lg bg-[#0a0f16] border border-primary/20 flex items-center gap-3 text-[11px] font-medium text-primary">
-                            <span className="font-bold tracking-wide uppercase bg-primary text-black px-1.5 py-0.5 rounded text-[9px]">Demo</span>
-                            demo@goalsense.ai / demo123
-                        </div>
+                <BlurIn delay={0.15}>
+                    <GlassCard className="p-8">
+                        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
 
-                        <div className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[12px] font-semibold text-white/80 ml-1">Email Address</label>
-                                <div className="relative group">
-                                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5e6b7e] group-focus-within:text-primary transition-colors" />
+                            {/* Email */}
+                            <div className="input-float">
+                                <div className="relative">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted pointer-events-none z-10" />
                                     <input
+                                        id="login-email"
                                         type="email"
-                                        placeholder="you@example.com"
                                         value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
+                                        onChange={e => setEmail(e.target.value)}
+                                        placeholder="Email address"
                                         required
-                                        className="w-full bg-[#0a0f16] border border-white/5 rounded-xl py-3.5 pl-11 pr-4 text-[13px] text-white placeholder:text-[#5e6b7e] focus:border-primary/50 focus:bg-[#0a0f16] focus:outline-none transition-all"
+                                        className="w-full bg-surface-2 border border-border rounded-xl pl-11 pr-4 py-4 text-foreground text-sm outline-none transition-colors duration-200 focus:border-primary placeholder:text-muted"
                                     />
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5 shadow-sm">
-                                <label className="text-[12px] font-semibold text-white/80 ml-1">Password</label>
-                                <div className="relative group">
-                                    <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-[#5e6b7e] group-focus-within:text-primary transition-colors" />
-                                    <input
-                                        type="password"
-                                        placeholder="Your password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        required
-                                        className="w-full bg-[#0a0f16] border border-white/5 rounded-xl py-3.5 pl-11 pr-10 text-[13px] text-white placeholder:text-[#5e6b7e] focus:border-primary/50 focus:bg-[#0a0f16] focus:outline-none transition-all"
-                                    />
-                                    <button type="button" aria-label="Toggle password visibility" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-primary">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" /><circle cx="12" cy="12" r="3" /></svg>
-                                    </button>
-                                </div>
+                            {/* Password */}
+                            <div className="relative">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted pointer-events-none z-10" />
+                                <input
+                                    id="login-password"
+                                    type={showPass ? 'text' : 'password'}
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    placeholder="Password"
+                                    required
+                                    className="w-full bg-surface-2 border border-border rounded-xl pl-11 pr-12 py-4 text-foreground text-sm outline-none transition-colors duration-200 focus:border-primary placeholder:text-muted"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPass(!showPass)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
+                                >
+                                    {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
                             </div>
+
+                            {/* Error */}
+                            {error && (
+                                <motion.p
+                                    initial={{ opacity: 0, y: -8 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="text-red-400 text-xs font-mono bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3"
+                                >
+                                    {error}
+                                </motion.p>
+                            )}
+
+                            {/* Submit */}
+                            <motion.button
+                                type="submit"
+                                disabled={loading}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="btn-primary h-12 text-sm mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? (
+                                    <span className="flex items-center gap-2">
+                                        <span className="h-4 w-4 rounded-full border-2 border-background/40 border-t-background animate-spin" />
+                                        Signing in…
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-2">
+                                        <LogIn className="h-4 w-4" /> Sign In
+                                    </span>
+                                )}
+                            </motion.button>
+                        </form>
+
+                        <div className="mt-6 text-center">
+                            <p className="text-muted text-xs">
+                                Don't have an account?{' '}
+                                <Link to="/register" className="text-primary hover:text-primary-dark font-semibold transition-colors">
+                                    Create one free
+                                </Link>
+                            </p>
                         </div>
-
-                        <button 
-                            type="submit" 
-                            disabled={isLoading}
-                            className="w-full bg-primary hover:bg-[#00c968] text-black font-bold h-[46px] rounded-xl text-[14px] flex items-center justify-center gap-2 transition-colors mt-2 disabled:opacity-50"
-                        >
-                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-                            {isLoading ? 'Signing In...' : 'Sign In'}
-                        </button>
-                    </form>
-
-                    <p className="text-center text-[13px] text-[#8495a7] mt-6">
-                        Don't have an account? <Link to="/register" className="text-primary hover:text-primary/80 transition-colors font-semibold">Register here</Link>
-                    </p>
-                </div>
+                    </GlassCard>
+                </BlurIn>
             </div>
         </div>
     );

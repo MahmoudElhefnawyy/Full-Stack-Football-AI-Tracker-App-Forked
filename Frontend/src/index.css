@@ -1,47 +1,292 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
+/* ── Design Tokens ────────────────────────────────────────────── */
 :root {
-    --background: #0a0f16;
-    --surface: #141d26;
-    --primary: #00e676;
-    --primary-dark: #00c853;
-    --secondary: #1f2a35;
+    --background:    #080c10;
+    --surface:       #0d1117;
+    --surface-2:     #141b24;
+    --border:        #1c2535;
+    --primary:       #00e676;
+    --primary-dark:  #00c853;
+    --primary-glow:  rgba(0, 230, 118, 0.15);
+    --muted:         #4a5c72;
+    --foreground:    #dde3ec;
+    --mono:          #7aabff;
 }
 
+/* ── Tailwind Theme Bridge ────────────────────────────────────── */
 @theme {
-    --color-background: var(--background);
-    --color-surface: var(--surface);
-    --color-primary: var(--primary);
+    --color-background:   var(--background);
+    --color-surface:      var(--surface);
+    --color-surface-2:    var(--surface-2);
+    --color-border:       var(--border);
+    --color-primary:      var(--primary);
     --color-primary-dark: var(--primary-dark);
-    --color-secondary: var(--secondary);
-    --font-sans: "Roboto", "Inter", ui-sans-serif, system-ui, sans-serif;
+    --color-muted:        var(--muted);
+    --color-foreground:   var(--foreground);
+    --color-mono:         var(--mono);
+    --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+    --font-sans:    'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-mono:    'Fira Code', ui-monospace, monospace;
+}
+
+/* ── Base ─────────────────────────────────────────────────────── */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
-    @apply bg-background text-white antialiased font-sans;
+    @apply bg-background text-foreground antialiased font-sans;
+    cursor: none; /* replaced by CustomCursor */
 }
 
-/* Ensure interactive elements have a pointer cursor */
-a,
-button,
-[role="button"],
-select,
-input[type="submit"],
-input[type="reset"],
-input[type="button"] {
-    cursor: pointer;
+/* Cursor pointer on all interactive elements */
+a, button, [role="button"], select,
+input[type="submit"], input[type="reset"], input[type="button"],
+label[for], [tabindex]:not([tabindex="-1"]) {
+    cursor: none;
 }
 
-@layer components {
-    .glass-card {
-        @apply bg-surface/80 backdrop-blur-md border border-white/10 rounded-xl;
-    }
+::selection {
+    background-color: var(--primary);
+    color: var(--background);
+}
 
-    .btn-primary {
-        @apply bg-primary hover:bg-primary-dark text-background font-bold py-2 px-6 rounded-lg transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2;
-    }
+/* ── Grain Overlay ────────────────────────────────────────────── */
+body::before {
+    content: '';
+    position: fixed;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 9999;
+    animation: grain 8s steps(10) infinite;
+    will-change: transform;
+}
 
-    .btn-outline {
-        @apply border border-primary text-primary hover:bg-primary/10 font-bold py-2 px-6 rounded-lg transition-all flex items-center justify-center gap-2;
+@keyframes grain {
+    0%, 100% { transform: translate(0, 0); }
+    10%       { transform: translate(-5%, -5%); }
+    20%       { transform: translate(-15%, 5%); }
+    30%       { transform: translate(7%, -25%); }
+    40%       { transform: translate(-5%, 25%); }
+    50%       { transform: translate(-15%, 10%); }
+    60%       { transform: translate(15%, 0%); }
+    70%       { transform: translate(0%, 15%); }
+    80%       { transform: translate(3%, 25%); }
+    90%       { transform: translate(-10%, 10%); }
+}
+
+/* Disable grain for reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    /* Kill ALL CSS animations and transitions */
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    body::before { animation: none; }
+    .marquee-track { animation: none; }
+    .blur-in { animation: none; opacity: 1; filter: none; transform: none; }
+}
+
+/* ── Touch device: restore native cursor ──────────────────────── */
+@media (hover: none) and (pointer: coarse) {
+    body, a, button, [role="button"], select,
+    input[type="submit"], input[type="reset"], input[type="button"],
+    label[for], [tabindex]:not([tabindex="-1"]) {
+        cursor: auto;
     }
 }
+
+
+/* ── Dot Grid Utility ─────────────────────────────────────────── */
+.dot-grid {
+    background-image: radial-gradient(circle, #dde3ec 1px, transparent 0);
+    background-size: 24px 24px;
+    opacity: 0.04;
+    pointer-events: none;
+}
+
+/* ── Corner Markers ───────────────────────────────────────────── */
+.corner-marker {
+    @apply absolute font-mono text-border select-none pointer-events-none text-sm;
+}
+
+/* ── Link Hover Slide ─────────────────────────────────────────── */
+.link-slide {
+    @apply relative overflow-hidden inline-block;
+}
+.link-slide .link-text {
+    @apply flex transition-transform duration-500 ease-out;
+}
+.link-slide:hover .link-text {
+    transform: translateY(-100%);
+}
+.link-slide .link-text-clone {
+    @apply absolute top-full left-0 text-foreground transition-[top] duration-500 ease-out;
+}
+.link-slide:hover .link-text-clone {
+    top: 0;
+}
+
+/* ── Glass Card ───────────────────────────────────────────────── */
+.glass-card {
+    @apply bg-surface/80 backdrop-blur-md border border-border rounded-2xl;
+}
+
+.glass-card-elevated {
+    @apply bg-surface-2/80 backdrop-blur-xl border border-border rounded-2xl;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+.btn-primary {
+    @apply bg-primary hover:bg-primary-dark text-background font-bold py-2.5 px-6
+           rounded-full transition-all duration-200 flex items-center justify-center gap-2
+           hover:shadow-[0_0_20px_rgba(0,230,118,0.3)] active:scale-95;
+}
+
+.btn-outline {
+    @apply border border-primary text-primary hover:bg-primary/10 font-bold py-2.5 px-6
+           rounded-full transition-all duration-200 flex items-center justify-center gap-2
+           active:scale-95;
+}
+
+.btn-ghost {
+    @apply text-muted hover:text-foreground font-medium py-2 px-4
+           rounded-full transition-colors duration-200 flex items-center justify-center gap-2;
+}
+
+/* ── Glow Effect ──────────────────────────────────────────────── */
+.glow-primary {
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.25);
+}
+
+.text-glow {
+    text-shadow: 0 0 20px rgba(0, 230, 118, 0.5);
+}
+
+/* ── Status Badge ─────────────────────────────────────────────── */
+.status-badge {
+    @apply flex items-center gap-2 rounded-full border border-border
+           bg-surface/50 px-4 py-2 backdrop-blur-sm;
+}
+
+.status-dot {
+    @apply h-2 w-2 rounded-full bg-primary animate-pulse;
+    box-shadow: 0 0 10px 1px var(--primary);
+}
+
+/* ── Section Mono Label ───────────────────────────────────────── */
+.section-label {
+    @apply flex items-center gap-3 font-mono text-xs text-muted uppercase tracking-widest;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--background); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ── Blur-in Animation ────────────────────────────────────────── */
+@keyframes blurIn {
+    from {
+        opacity: 0;
+        filter: blur(12px);
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        filter: blur(0);
+        transform: translateY(0);
+    }
+}
+
+.blur-in {
+    animation: blurIn 0.6s ease forwards;
+}
+
+/* ── Marquee ──────────────────────────────────────────────────── */
+@keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+
+.marquee-track {
+    animation: marquee 30s linear infinite;
+    will-change: transform;
+}
+
+.marquee-track:hover {
+    animation-play-state: paused;
+}
+
+/* ── Floating Label Input ─────────────────────────────────────── */
+.input-float {
+    @apply relative;
+}
+.input-float input,
+.input-float textarea {
+    @apply w-full bg-surface border border-border rounded-xl px-4 pt-6 pb-2 text-foreground
+           text-sm outline-none transition-colors duration-200
+           focus:border-primary placeholder-transparent;
+}
+.input-float label {
+    @apply absolute left-4 top-4 text-muted text-sm pointer-events-none
+           transition-all duration-200;
+}
+.input-float input:focus ~ label,
+.input-float input:not(:placeholder-shown) ~ label,
+.input-float textarea:focus ~ label,
+.input-float textarea:not(:placeholder-shown) ~ label {
+    @apply top-2 text-xs text-primary;
+}
+
+/* ── Mobile / Safe Area ───────────────────────────────────────── */
+/* Smooth momentum scrolling on iOS */
+html {
+    -webkit-overflow-scrolling: touch;
+    /* Support notched devices */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+}
+
+/* Bottom safe area for navbars on iOS */
+.pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* ── Focus Visible Ring ────────────────────────────────────────── */
+/* Only show outlines when navigating via keyboard */
+:focus { outline: none; }
+:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* ── Print ─────────────────────────────────────────────────────── */
+@media print {
+    body::before,
+    .grain,
+    .marquee-track { display: none !important; }
+    body { background: white !important; color: black !important; }
+    .glass-card, .glass-card-elevated {
+        border: 1px solid #ccc !important;
+        background: white !important;
+        backdrop-filter: none !important;
+    }
+}
+
+/* ── Utility: text-balance ─────────────────────────────────────── */
+.text-balance { text-wrap: balance; }

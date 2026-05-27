@@ -10,6 +10,9 @@ import { jsPDF } from 'jspdf';
 import { motion, AnimatePresence } from 'framer-motion';
 import { itemVariants, hoverScale, tapScale } from '../utils/animations';
 import { api, type MatchOverview } from '../services/api';
+import BlurIn from '../components/ui/BlurIn';
+import GlassCard from '../components/ui/GlassCard';
+import SectionLabel from '../components/ui/SectionLabel';
 
 const Comparison = () => {
     const [searchParams] = useSearchParams();
@@ -85,23 +88,13 @@ const Comparison = () => {
     const MetricBar = ({ label, leftVal, rightVal, leftPct, showSymbol = '', delay = 0 }: { label: string; leftVal: number; rightVal: number; leftPct: number; showSymbol?: string; delay?: number }) => (
         <motion.div variants={itemVariants} className="mb-6 last:mb-0">
             <div className="flex justify-between text-xs font-bold mb-2">
-                <span className="text-[#10b981]">{leftVal}{showSymbol}</span>
-                <span className="text-[#8495a7] font-medium">{label}</span>
-                <span className="text-[#64748b]">{rightVal}{showSymbol}</span>
+                <span className="text-primary">{leftVal}{showSymbol}</span>
+                <span className="text-muted font-medium">{label}</span>
+                <span className="text-muted/60">{rightVal}{showSymbol}</span>
             </div>
-            <div className="h-1.5 w-full bg-[#1e293b] rounded-full overflow-hidden flex">
-                <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${leftPct}%` }}
-                    transition={{ duration: 1, delay: 1 + delay }}
-                    className="h-full bg-[#10b981] rounded-r-full"
-                ></motion.div>
-                <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${100 - leftPct}%` }}
-                    transition={{ duration: 1, delay: 1 + delay }}
-                    className="h-full bg-[#334155] rounded-l-full"
-                ></motion.div>
+            <div className="h-1.5 w-full bg-surface-2 rounded-full overflow-hidden flex">
+                <motion.div initial={{ width: 0 }} animate={{ width: `${leftPct}%` }} transition={{ duration: 1, delay: 1 + delay }} className="h-full bg-primary rounded-r-full" />
+                <motion.div initial={{ width: 0 }} animate={{ width: `${100 - leftPct}%` }} transition={{ duration: 1, delay: 1 + delay }} className="h-full bg-border rounded-l-full" />
             </div>
         </motion.div>
     );
@@ -110,10 +103,10 @@ const Comparison = () => {
         const isLeftHigher = Number(left) > Number(right);
         const isRightHigher = Number(right) > Number(left);
         return (
-            <motion.div variants={itemVariants} className="flex items-center justify-between py-4 border-b border-[#242e3a]/50 last:border-0 text-sm">
-                <span className={`w-1/3 text-center font-bold ${isLeftHigher ? 'text-[#10b981]' : 'text-white'}`}>{left}</span>
-                <span className="w-1/3 text-center text-[#8495a7] text-xs font-medium">{label}</span>
-                <span className={`w-1/3 text-center font-bold ${isRightHigher ? 'text-[#10b981]' : 'text-[#8495a7]'}`}>{right}</span>
+            <motion.div variants={itemVariants} className="flex items-center justify-between py-4 border-b border-border last:border-0 text-sm">
+                <span className={`w-1/3 text-center font-bold ${isLeftHigher ? 'text-primary' : 'text-foreground'}`}>{left}</span>
+                <span className="w-1/3 text-center text-muted text-xs font-medium">{label}</span>
+                <span className={`w-1/3 text-center font-bold ${isRightHigher ? 'text-primary' : 'text-muted'}`}>{right}</span>
             </motion.div>
         );
     };
@@ -171,94 +164,66 @@ const Comparison = () => {
     };
 
     return (
-        <div ref={pageRef} className="max-w-7xl mx-auto px-6 md:px-10 lg:px-12 py-32 text-white bg-[#0a0f16]">
-            {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
-            >
+        <div ref={pageRef} className="max-w-7xl mx-auto px-6 md:px-10 py-32">
+            <BlurIn className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                 <div>
-                    <h1 className="text-3xl font-bold text-white mb-2">Team Comparison</h1>
-                    <p className="text-[#8495a7] text-sm">Head-to-head analysis</p>
+                    <SectionLabel number="00" path="~/comparison" className="mb-4" />
+                    <h1 className="font-display font-black text-3xl md:text-4xl text-foreground mt-4">Team <span className="text-primary">Comparison.</span></h1>
+                    <p className="text-muted text-sm mt-2">Head-to-head AI match analysis</p>
                 </div>
                 <div className="flex items-center gap-3" data-html2canvas-ignore="true">
-                    <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={handleShare} className="flex items-center gap-2 px-4 py-2 bg-[#0d151c] hover:bg-[#15202b] border border-[#242e3a] rounded-lg text-sm font-medium transition-colors text-white">
-                        <Share2 className="w-4 h-4" /> Share
+                    <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={handleShare} className="btn-ghost h-9 px-4 text-xs border border-border hover:border-primary/30">
+                        <Share2 className="w-3.5 h-3.5" /> Share
                     </motion.button>
-                    <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={handleExportPDF} disabled={isExporting} className="flex items-center gap-2 px-4 py-2 bg-[#0d151c] hover:bg-[#15202b] border border-[#242e3a] rounded-lg text-sm font-medium transition-colors text-[#10b981] disabled:opacity-50">
-                        {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                        {isExporting ? 'Exporting...' : 'PDF'}
+                    <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={handleExportPDF} disabled={isExporting} className="btn-ghost h-9 px-4 text-xs border border-border hover:border-primary/30 disabled:opacity-50">
+                        {isExporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                        {isExporting ? 'Exporting…' : 'PDF'}
                     </motion.button>
                 </div>
-            </motion.div>
+            </BlurIn>
 
             <AnimatePresence mode="wait">
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-40 bg-[#0b1016] rounded-2xl border border-[#242e3a]">
-                        <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-                        <p className="text-[#8495a7] font-medium">Fetching Head-to-Head Data...</p>
-                    </div>
+                    <GlassCard className="flex flex-col items-center justify-center py-40">
+                        <div className="h-10 w-10 rounded-full border-2 border-border border-t-primary animate-spin mb-4" />
+                        <p className="text-muted font-mono text-sm">Fetching Head-to-Head Data…</p>
+                    </GlassCard>
                 ) : !matchData ? (
-                    <div className="flex flex-col items-center justify-center py-40 bg-[#0b1016] rounded-2xl border border-[#242e3a]">
-                        <p className="text-[#8495a7] font-medium mb-6">No match selected for comparison.</p>
-                        <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={() => window.history.back()} className="px-6 py-2 bg-primary text-black font-bold rounded-lg text-sm">
+                    <GlassCard className="flex flex-col items-center justify-center py-40">
+                        <p className="text-muted text-sm mb-6">No match selected for comparison.</p>
+                        <motion.button whileHover={hoverScale} whileTap={tapScale} onClick={() => window.history.back()} className="btn-primary h-10 px-6 text-xs">
                             Go Back
                         </motion.button>
-                    </div>
+                    </GlassCard>
                 ) : (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                     >
-                        {/* Match Result Banner */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.8 }}
-                            className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6 lg:p-10 mb-6 flex flex-col md:flex-row items-center justify-between relative overflow-hidden"
-                        >
-                            {/* Left Team */}
-                            <motion.div variants={itemVariants} className="flex flex-col items-center z-10 w-1/3">
-                                <div className="w-16 h-16 bg-[#064e3b]/30 border border-[#10b981]/30 rounded-xl flex items-center justify-center mb-3 text-2xl">
-                                    ⚽
-                                </div>
-                                <h3 className="font-bold text-white mb-2 text-center">{matchData.homeTeam}</h3>
-                                <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20">
-                                    Home
-                                </span>
+                        <GlassCard className="p-8 lg:p-10 mb-6 flex flex-col md:flex-row items-center justify-between">
+                            <motion.div variants={itemVariants} className="flex flex-col items-center w-1/3">
+                                <div className="w-14 h-14 bg-primary/10 border border-primary/30 rounded-2xl flex items-center justify-center mb-3 text-xl">⚽</div>
+                                <h3 className="font-display font-bold text-foreground mb-2 text-center">{matchData.homeTeam}</h3>
+                                <span className="font-mono text-[9px] px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">Home</span>
                             </motion.div>
-
-                            {/* Score Center */}
-                            <motion.div variants={itemVariants} className="flex flex-col items-center justify-center z-10 my-8 md:my-0 w-1/3">
-                                <div className="text-5xl md:text-6xl font-black text-white mb-2 tracking-tight">
-                                    {matchData.homeScore}<span className="text-[#8495a7] font-light mx-2">-</span>{matchData.awayScore}
+                            <motion.div variants={itemVariants} className="flex flex-col items-center w-1/3 my-8 md:my-0">
+                                <div className="font-display font-black text-5xl md:text-6xl text-foreground tracking-tight mb-2">
+                                    {matchData.homeScore}<span className="text-muted font-light mx-2">—</span>{matchData.awayScore}
                                 </div>
-                                <div className="text-[#8495a7] text-[10px] uppercase tracking-widest mb-1">{matchData.date}</div>
-                                <div className="text-[#10b981] text-xs font-semibold flex items-center gap-1">
-                                    <Trophy className="w-3 h-3" /> {matchData.status}
-                                </div>
+                                <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-1">{matchData.date}</p>
+                                <span className="flex items-center gap-1 text-primary text-xs font-semibold"><Trophy className="w-3 h-3" /> {matchData.status}</span>
                             </motion.div>
-
-                            {/* Right Team */}
-                            <motion.div variants={itemVariants} className="flex flex-col items-center z-10 w-1/3">
-                                <div className="w-16 h-16 bg-[#1e293b]/50 border border-[#334155] rounded-xl flex items-center justify-center mb-3 text-2xl">
-                                    ⚽
-                                </div>
-                                <h3 className="font-bold text-[#e2e8f0] mb-2 text-center">{matchData.awayTeam}</h3>
-                                <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#1e293b] text-[#94a3b8] border border-[#334155]">
-                                    Away
-                                </span>
+                            <motion.div variants={itemVariants} className="flex flex-col items-center w-1/3">
+                                <div className="w-14 h-14 bg-surface-2 border border-border rounded-2xl flex items-center justify-center mb-3 text-xl">⚽</div>
+                                <h3 className="font-display font-bold text-muted mb-2 text-center">{matchData.awayTeam}</h3>
+                                <span className="font-mono text-[9px] px-3 py-1 rounded-full bg-surface-2 text-muted border border-border">Away</span>
                             </motion.div>
-                        </motion.div>
+                        </GlassCard>
 
-                        {/* Charts Grid */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                            {/* Radar Chart */}
-                            <motion.div variants={itemVariants} className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6">
-                                <h3 className="font-bold text-white mb-6 text-sm">Performance Radar</h3>
+                            <GlassCard className="p-6">
+                                <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-6">Performance Radar</p>
                                 <div className="h-[300px] w-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
@@ -272,18 +237,13 @@ const Comparison = () => {
                                     </ResponsiveContainer>
                                 </div>
                                 <div className="flex justify-center items-center gap-6 mt-4">
-                                    <div className="flex items-center gap-2 text-[10px] text-[#8495a7]">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-[#10b981]"></div> {matchData.homeTeam}
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[10px] text-[#8495a7]">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-[#64748b]"></div> {matchData.awayTeam}
-                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] text-muted"><div className="w-2 h-2 rounded-full bg-primary" /> {matchData.homeTeam}</div>
+                                    <div className="flex items-center gap-2 text-[10px] text-muted"><div className="w-2 h-2 rounded-full bg-border" /> {matchData.awayTeam}</div>
                                 </div>
-                            </motion.div>
+                            </GlassCard>
 
-                            {/* Bar Chart */}
-                            <motion.div variants={itemVariants} className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6">
-                                <h3 className="font-bold text-white mb-6 text-sm">Team Attributes</h3>
+                            <GlassCard className="p-6">
+                                <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-6">Team Attributes</p>
                                 <div className="h-[300px] w-full">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <BarChart data={barData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
@@ -297,19 +257,14 @@ const Comparison = () => {
                                     </ResponsiveContainer>
                                 </div>
                                 <div className="flex justify-center items-center gap-6 mt-4">
-                                    <div className="flex items-center gap-2 text-[10px] text-[#8495a7]">
-                                        <div className="w-2.5 h-2.5 bg-[#10b981] rounded-sm"></div> {matchData.homeTeam}
-                                    </div>
-                                    <div className="flex items-center gap-2 text-[10px] text-[#8495a7]">
-                                        <div className="w-2.5 h-2.5 bg-[#64748b] rounded-sm"></div> {matchData.awayTeam}
-                                    </div>
+                                    <div className="flex items-center gap-2 text-[10px] text-muted"><div className="w-2 h-2 bg-primary rounded-sm" /> {matchData.homeTeam}</div>
+                                    <div className="flex items-center gap-2 text-[10px] text-muted"><div className="w-2 h-2 bg-border rounded-sm" /> {matchData.awayTeam}</div>
                                 </div>
-                            </motion.div>
+                            </GlassCard>
                         </div>
 
-                        {/* Key Metrics */}
-                        <div className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6 mb-6">
-                            <h3 className="font-bold text-white mb-8 text-sm">Key Metrics</h3>
+                        <GlassCard className="p-6 mb-6">
+                            <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-8">Key Metrics</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
                                 <MetricBar 
                                     label="Possession" 
@@ -335,14 +290,13 @@ const Comparison = () => {
                                     />
                                 ))}
                             </div>
-                        </div>
+                        </GlassCard>
 
-                        {/* Statistics Breakdown */}
-                        <div className="bg-[#0b1016] border border-[#242e3a] rounded-2xl p-6 mb-8">
-                            <h3 className="font-bold text-white mb-6 text-sm">Full Statistics Breakdown</h3>
+                        <GlassCard className="p-6 mb-8">
+                            <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-6">Full Statistics Breakdown</p>
                             <div className="w-full">
-                                <div className="flex items-center justify-between pb-4 border-b border-[#242e3a] text-[10px] font-bold text-[#8495a7] uppercase tracking-wider">
-                                    <span className="w-1/3 text-center text-[#10b981]">{matchData.homeTeam}</span>
+                                <div className="flex items-center justify-between pb-4 border-b border-border text-[10px] font-bold text-muted uppercase tracking-widest">
+                                    <span className="w-1/3 text-center text-primary">{matchData.homeTeam}</span>
                                     <span className="w-1/3 text-center">Stat</span>
                                     <span className="w-1/3 text-center">{matchData.awayTeam}</span>
                                 </div>
@@ -352,7 +306,7 @@ const Comparison = () => {
                                     ))}
                                 </div>
                             </div>
-                        </div>
+                        </GlassCard>
                     </motion.div>
                 )}
             </AnimatePresence>

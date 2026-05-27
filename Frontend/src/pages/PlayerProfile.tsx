@@ -1,124 +1,165 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { RadarStatsChart, DonutChart } from '../components/ui/Charts';
 import { api, type PlayerDetail } from '../services/api';
-import { User, Activity, CheckCircle, Target } from 'lucide-react';
+import { User, Activity, Target, CheckCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import BlurIn from '../components/ui/BlurIn';
+import GlassCard from '../components/ui/GlassCard';
+import SectionLabel from '../components/ui/SectionLabel';
+import StatCard from '../components/ui/StatCard';
 
-const PlayerProfile: React.FC = () => {
+const PlayerProfile = () => {
     const { id } = useParams<{ id: string }>();
     const [player, setPlayer] = useState<PlayerDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const fetchPlayer = async () => {
-            if (!id) return;
-            try {
-                const data = await api.players.get(id);
-                setPlayer(data);
-            } catch (err) {
-                console.error("Player fetch error:", err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchPlayer();
+        if (!id) return;
+        api.players.get(id)
+            .then(setPlayer)
+            .catch(console.error)
+            .finally(() => setIsLoading(false));
     }, [id]);
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0a0f16]">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
+    if (isLoading) return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+            <div className="h-10 w-10 rounded-full border-2 border-border border-t-primary animate-spin" />
+        </div>
+    );
 
-    if (!player) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[#0a0f16] text-white">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold mb-2">Player not found</h2>
-                    <p className="text-slate-400">The player you are looking for does not exist or has been removed.</p>
-                </div>
-            </div>
-        );
-    }
+    if (!player) return (
+        <div className="min-h-screen flex items-center justify-center bg-background">
+            <GlassCard className="p-12 text-center max-w-sm">
+                <User className="h-10 w-10 text-muted mx-auto mb-4" />
+                <h2 className="font-display font-bold text-xl text-foreground mb-2">Player Not Found</h2>
+                <p className="text-muted text-sm">This player does not exist or has been removed.</p>
+            </GlassCard>
+        </div>
+    );
 
     const radarData = Object.keys(player.attributes).map(key => ({
         subject: key.charAt(0).toUpperCase() + key.slice(1),
-        A: player.attributes[key as keyof typeof player.attributes]
+        A: player.attributes[key as keyof typeof player.attributes],
     }));
 
-    return (
-        <div className="container mx-auto px-4 py-32 max-w-7xl animate-fade-in text-white">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 mb-8 relative overflow-hidden group">
-                <div className="absolute -right-20 -top-20 text-emerald-500/10 rotate-12 group-hover:rotate-6 transition-transform duration-500">
-                    <span className="text-[250px] font-bold italic block leading-none">{player.number}</span>
-                </div>
+    const seasonStats = [
+        { icon: Target, label: 'Goals', value: String(player.goals), color: 'text-primary' },
+        { icon: Activity, label: 'Assists', value: String(player.assists), color: 'text-blue-400' },
+        { icon: CheckCircle, label: 'Pass Acc.', value: `${Math.round(player.passAccuracy * 100)}%`, color: 'text-purple-400' },
+    ];
 
-                <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                    <div className="w-32 h-32 bg-slate-800 rounded-full flex items-center justify-center border-4 border-slate-700 shadow-xl">
-                        <User className="w-16 h-16 text-slate-500" />
-                    </div>
-                    <div className="text-center md:text-left">
-                        <h1 className="text-4xl font-bold mb-2">{player.name}</h1>
-                        <p className="text-xl text-slate-400">{player.position} • {player.teamName}</p>
-                        <div className="mt-4 flex gap-4 justify-center md:justify-start">
-                            <div className="bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-xl border border-emerald-500/30">
-                                <span className="block text-xs uppercase font-bold opacity-70">OVR</span>
-                                <span className="text-xl font-black">{player.rating}</span>
+    return (
+        <div className="max-w-7xl mx-auto px-6 md:px-10 py-32">
+
+            {/* Hero banner */}
+            <BlurIn className="mb-10">
+                <SectionLabel number="00" path="~/player-profile" className="mb-6" />
+                <GlassCard className="p-8 mt-6 relative overflow-hidden">
+                    {/* Giant jersey number watermark */}
+                    <span className="absolute -right-4 -top-6 font-display font-black text-[200px] leading-none text-primary/5 select-none pointer-events-none rotate-6 group-hover:rotate-3 transition-transform">
+                        {player.number}
+                    </span>
+                    <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                        {/* Avatar */}
+                        <div className="h-28 w-28 rounded-3xl bg-primary/10 border-2 border-primary/30 flex items-center justify-center shrink-0 shadow-[0_0_40px_rgba(0,230,118,0.1)]">
+                            <User className="h-14 w-14 text-primary/60" />
+                        </div>
+                        <div className="text-center md:text-left">
+                            <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-2">{player.teamName}</p>
+                            <h1 className="font-display font-black text-3xl md:text-5xl text-foreground tracking-tight">{player.name}<span className="text-primary">.</span></h1>
+                            <p className="text-muted text-sm mt-2">{player.position}</p>
+                            <div className="flex items-center gap-3 mt-4 justify-center md:justify-start">
+                                <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-xl px-4 py-2">
+                                    <span className="font-mono text-[9px] text-muted uppercase tracking-widest">OVR</span>
+                                    <span className="font-display font-black text-2xl text-primary">{player.rating}</span>
+                                </div>
+                                <div className="flex items-center gap-2 bg-surface-2 border border-border rounded-xl px-4 py-2">
+                                    <span className="font-mono text-[9px] text-muted uppercase tracking-widest">Mins</span>
+                                    <span className="font-display font-black text-2xl text-foreground">{player.minutesPlayed}'</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
+                </GlassCard>
+            </BlurIn>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-1 space-y-8">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Season Stats</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex justify-between items-center bg-slate-800/50 p-4 rounded-xl">
-                                <div className="flex items-center gap-3"><Target className="w-5 h-5 text-emerald-400" /> Goals</div>
-                                <span className="font-bold text-xl">{player.goals}</span>
-                            </div>
-                            <div className="flex justify-between items-center bg-slate-800/50 p-4 rounded-xl">
-                                <div className="flex items-center gap-3"><Activity className="w-5 h-5 text-blue-400" /> Assists</div>
-                                <span className="font-bold text-xl">{player.assists}</span>
-                            </div>
-                            <div className="flex justify-between items-center bg-slate-800/50 p-4 rounded-xl">
-                                <div className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-purple-400" /> Accuracy</div>
-                                <span className="font-bold text-xl">{Math.round(player.passAccuracy * 100)}%</span>
-                            </div>
-                        </CardContent>
-                    </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Performance Distribution</CardTitle>
-                        </CardHeader>
-                        <CardContent>
+                {/* Left column: stats + donut */}
+                <div className="lg:col-span-1 flex flex-col gap-5">
+                    <BlurIn delay={0.1}>
+                        <GlassCard className="p-6">
+                            <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-5">Season Stats</p>
+                            <div className="flex flex-col gap-3">
+                                {seasonStats.map(({ icon: Icon, label, value, color }) => (
+                                    <div key={label} className="flex items-center justify-between p-3.5 bg-surface-2 border border-border rounded-xl">
+                                        <div className="flex items-center gap-3">
+                                            <Icon className={`h-4 w-4 ${color}`} />
+                                            <span className="text-sm font-medium text-foreground">{label}</span>
+                                        </div>
+                                        <span className="font-display font-black text-xl text-foreground">{value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </GlassCard>
+                    </BlurIn>
+
+                    <BlurIn delay={0.15}>
+                        <GlassCard className="p-6">
+                            <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-4">Performance Distribution</p>
                             <DonutChart data={[
                                 { name: 'Passes', value: player.passesCompleted },
                                 { name: 'Turnovers', value: player.turnovers },
-                            ]} height={250} />
-                        </CardContent>
-                    </Card>
+                            ]} height={220} />
+                        </GlassCard>
+                    </BlurIn>
+
+                    {/* Mini stat grid */}
+                    <BlurIn delay={0.2}>
+                        <div className="grid grid-cols-2 gap-3">
+                            <GlassCard className="p-4">
+                                <StatCard value={String(player.passesCompleted)} label="Passes" />
+                            </GlassCard>
+                            <GlassCard className="p-4">
+                                <StatCard value={String(player.turnovers)} label="Turnovers" />
+                            </GlassCard>
+                        </div>
+                    </BlurIn>
                 </div>
 
-                <div className="lg:col-span-2">
-                    <Card className="h-full">
-                        <CardHeader>
-                            <CardTitle>Technical Attributes</CardTitle>
-                        </CardHeader>
-                        <CardContent className="h-[450px]">
-                            <RadarStatsChart data={radarData} height={400} />
-                        </CardContent>
-                    </Card>
-                </div>
+                {/* Right column: radar attributes */}
+                <BlurIn delay={0.12} className="lg:col-span-2">
+                    <GlassCard className="p-6 h-full">
+                        <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-4">Technical Attributes — Radar</p>
+                        <RadarStatsChart data={radarData} height={420} />
+
+                        {/* Attribute bars below radar */}
+                        <div className="mt-6 space-y-3 pt-5 border-t border-border">
+                            {Object.entries(player.attributes).map(([key, val], idx) => (
+                                <motion.div
+                                    key={key}
+                                    initial={{ opacity: 0, x: 10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.3 + idx * 0.05 }}
+                                >
+                                    <div className="flex justify-between font-mono text-[10px] text-muted mb-1">
+                                        <span className="capitalize">{key}</span>
+                                        <span className="text-foreground">{val}</span>
+                                    </div>
+                                    <div className="h-1 bg-surface-2 rounded-full overflow-hidden">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${val}%` }}
+                                            transition={{ duration: 1, ease: 'easeOut', delay: 0.4 + idx * 0.05 }}
+                                            className="h-full bg-primary rounded-full"
+                                        />
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </GlassCard>
+                </BlurIn>
             </div>
         </div>
     );
