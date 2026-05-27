@@ -17,3 +17,7 @@ pydantic-settings
 boxmot
 torch
 torchvision
+
+# HTTP client — used to download uploaded videos from the Backend API
+# (Backend and Agent run in separate containers with separate volumes)
+requests

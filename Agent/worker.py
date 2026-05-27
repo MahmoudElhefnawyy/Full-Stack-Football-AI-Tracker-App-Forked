@@ -9,13 +9,28 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'footbal
 from celery import Celery
 from football_analysis.main import run_analysis
 
-# Celery app mirrors the Backend configuration
+# ── Celery / infrastructure config ───────────────────────────────────────────
 REDIS_URL = (
     os.environ.get("CELERY_BROKER_URL")
     or os.environ.get("REDIS_URL")
     or "redis://localhost:6379/0"
 )
 DATABASE_URL = os.environ.get("DATABASE_URL")
+
+# Public URL of the Backend API service.
+# The Agent uses this to download uploaded videos, because Backend and Agent
+# run in separate containers with separate Railway volumes:
+#   Backend volume → /backend/app/data/media  (backend-api-volume)
+#   Agent volume   → /app/data/media          (ai-agent-volume)
+# The Backend exposes its media directory via StaticFiles at:
+#   GET {BACKEND_API_URL}/api/v1/analysis/results/inputs/{filename}
+BACKEND_API_URL = os.environ.get(
+    "BACKEND_API_URL", "https://goalsense-api.up.railway.app"
+).rstrip("/")
+
+# Local directory inside the Agent container where videos are stored
+AGENT_INPUT_DIR = "/app/data/media/inputs"
+AGENT_OUTPUT_DIR = "/app/data/media/outputs"
 
 worker_app = Celery(
     "football_analytics",
@@ -24,20 +39,55 @@ worker_app = Celery(
 )
 
 
+def _download_video(filename: str) -> str:
+    """
+    Download an uploaded video from the Backend API's StaticFiles endpoint
+    to the Agent's own volume.
+
+    The Backend saves uploads to /backend/app/data/media/inputs/ (its volume).
+    The Agent cannot access that path — different container, different volume.
+    Instead, we fetch the file over HTTP from the Backend's public URL.
+
+    Args:
+        filename: The basename of the video file (e.g. "{task_id}_match.mp4").
+
+    Returns:
+        Absolute path of the locally saved file on the Agent's volume.
+    """
+    import requests
+
+    url = f"{BACKEND_API_URL}/api/v1/analysis/results/inputs/{filename}"
+    local_path = os.path.join(AGENT_INPUT_DIR, filename)
+    os.makedirs(AGENT_INPUT_DIR, exist_ok=True)
+
+    print(f"[Worker] Downloading video from {url} ...")
+    with requests.get(url, stream=True, timeout=300) as response:
+        response.raise_for_status()
+        with open(local_path, "wb") as f:
+            for chunk in response.iter_content(chunk_size=65536):  # 64 KB chunks
+                f.write(chunk)
+
+    size_mb = os.path.getsize(local_path) / (1024 * 1024)
+    print(f"[Worker] Download complete — {size_mb:.1f} MB saved to {local_path}")
+    return local_path
+
+
 @worker_app.task(name="agent.analyze_video")
 def analyze_video_task(task_id: str, input_path: str,
                         home_team_name: str = "Team A",
                         away_team_name: str = "Team B"):
     """
-    Celery task: run YOLO video analysis and export results to Backend data dir.
+    Celery task: download the uploaded video, run YOLO analysis, export results.
 
     Args:
         task_id:        UUID assigned by the Backend on upload.
-        input_path:     Absolute path to the uploaded video file.
+        input_path:     Absolute path on the BACKEND container (used only to
+                        derive the filename; not directly accessible here).
         home_team_name: Team name for team 1 (from Upload form).
         away_team_name: Team name for team 2 (from Upload form).
     """
-    print(f"[Worker] Starting task {task_id} | {home_team_name} vs {away_team_name} | {input_path}")
+    print(f"[Worker] Starting task {task_id} | {home_team_name} vs {away_team_name}")
+    print(f"[Worker] Backend input_path (for filename reference): {input_path}")
 
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
@@ -55,37 +105,42 @@ def analyze_video_task(task_id: str, input_path: str,
             task.status = TaskStatus.PROCESSING
             session.commit()
 
-        # 2. Run the full AI analysis pipeline
-        output_path = input_path.replace("inputs", "outputs")
-        Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+        # 2. Download video from Backend HTTP API to Agent's local volume.
+        #    The Backend and Agent run in separate containers with separate volumes,
+        #    so the path in `input_path` does not exist in this container.
+        filename = os.path.basename(input_path)
+        local_input_path = _download_video(filename)
 
-        # run_analysis now returns (tracks, team_ball_control)
+        # 3. Derive output path on Agent's own volume
+        os.makedirs(AGENT_OUTPUT_DIR, exist_ok=True)
+        local_output_path = os.path.join(AGENT_OUTPUT_DIR, filename)
+
+        # 4. Run the full AI analysis pipeline
         tracks, team_ball_control = run_analysis(
-            input_path,
-            output_path,
+            local_input_path,
+            local_output_path,
             team_names=[home_team_name, away_team_name],
         )
 
-        # 3. Export to Backend-compatible MatchData JSON
+        # 5. Export to Backend-compatible MatchData JSON
         from football_analysis.exporter import export_to_match_data
 
-        backend_data_dir = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', 'Backend', 'app', 'data')
-        )
+        # Export into the Agent's data directory (mounted volume)
+        agent_data_dir = "/app/data"
         match_id, json_path = export_to_match_data(
             task_id=task_id,
             filename=task.filename if task else "unknown.mp4",
             tracks=tracks,
             team_ball_control=team_ball_control,
-            backend_data_dir=backend_data_dir,
+            backend_data_dir=agent_data_dir,
             home_team_name=home_team_name,
             away_team_name=away_team_name,
         )
 
-        # 4. Mark task as SUCCESS
+        # 6. Mark task as SUCCESS
         if task:
             task.status = TaskStatus.SUCCESS
-            task.output_path = output_path
+            task.output_path = local_output_path
             task.result_data = {
                 "completed": True,
                 "match_id": match_id,
