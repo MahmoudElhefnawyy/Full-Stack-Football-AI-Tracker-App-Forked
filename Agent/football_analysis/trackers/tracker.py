@@ -19,21 +19,28 @@ class Tracker:
         self.device = 'cpu'  # Railway has no GPU
         self.model = YOLO(model_path)
 
-        # boxmot API changed across versions. Try the old API first (v10),
-        # then fall back to the new API (v18+) if it fails at runtime.
+        # boxmot v19 moved the ReID module from boxmot.appearance to boxmot.reid.
+        # StrongSort expects reid_model with .get_features(xyxy, img) method,
+        # which lives on the ReID backend (ReID(...).model), not ReID() itself.
         reid_path = Path("osnet_x0_25_msmt17.pt")
         try:
-            # New API (v18+): build ReID model object, pass to StrongSort
-            from boxmot.appearance.reid_auto_backend import ReidAutoBackend
-            reid_model = ReidAutoBackend(
-                weights=reid_path, device=self.device, half=False,
-            )
-            self.tracker = StrongSort(reid_model=reid_model)
+            # v19 API: boxmot.reid.core.reid.ReID
+            from boxmot.reid.core.reid import ReID
+            reid = ReID(weights=reid_path, device=self.device, half=False)
+            self.tracker = StrongSort(reid_model=reid.model)
         except (ImportError, ModuleNotFoundError):
-            # Old API (v10): pass path directly, boxmot handles download
-            self.tracker = StrongSort(
-                reid_weights=reid_path, device=self.device, half=False,
-            )
+            try:
+                # v18 API: boxmot.appearance.reid_auto_backend.ReidAutoBackend
+                from boxmot.appearance.reid_auto_backend import ReidAutoBackend
+                reid_model = ReidAutoBackend(
+                    weights=reid_path, device=self.device, half=False,
+                )
+                self.tracker = StrongSort(reid_model=reid_model)
+            except (ImportError, ModuleNotFoundError):
+                # v10 API: pass path directly
+                self.tracker = StrongSort(
+                    reid_weights=reid_path, device=self.device, half=False,
+                )
 
     def add_position_to_tracks(self, tracks):
         for object, object_tracks in tracks.items():
