@@ -10,19 +10,26 @@ sys.path.append('../')
 from utils import get_center_of_bbox, get_bbox_width, get_foot_position
 from pathlib import Path
 from boxmot.trackers.strongsort.strongsort import StrongSort
+from boxmot.appearance.reid_auto_backend import ReidAutoBackend
 
 import torch
 
 
 class Tracker:
     def __init__(self, model_path):
-        self.device = '0' if torch.cuda.is_available() else 'cpu'
+        self.device = 'cpu'  # Railway has no GPU
         self.model = YOLO(model_path)
-        self.tracker = StrongSort(
-            reid_weights=Path("/app/osnet_x0_25_msmt17.pt"),
+
+        # Build the ReID appearance model first (boxmot v18+ API change:
+        # StrongSort now expects a pre-built model object via reid_model=,
+        # not a file path via reid_weights= as in older versions).
+        reid_model = ReidAutoBackend(
+            weights=Path("/app/osnet_x0_25_msmt17.pt"),
             device=self.device,
             half=False,
         )
+
+        self.tracker = StrongSort(reid_model=reid_model)
 
     def add_position_to_tracks(self, tracks):
         for object, object_tracks in tracks.items():

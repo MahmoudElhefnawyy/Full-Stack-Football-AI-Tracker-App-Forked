@@ -13,9 +13,8 @@ psycopg2-binary
 pydantic
 pydantic-settings
 
-# StrongSort tracker with ReID support — pinned to v10 (stable auto-download API)
-# boxmot v19 changed ReID loading and no longer auto-downloads to reid_weights path
-boxmot==10.0.72
+# StrongSort tracker with ReID support (appearance-based re-identification)
+boxmot
 torch
 torchvision
 

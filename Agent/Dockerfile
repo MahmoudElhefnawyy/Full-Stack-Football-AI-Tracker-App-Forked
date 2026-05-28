@@ -1,12 +1,13 @@
 FROM python:3.11-slim
 
-# System dependencies for OpenCV, psycopg2, and wget
+# System dependencies for OpenCV, psycopg2, wget, and curl
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
     libpq-dev \
     gcc \
     wget \
+    curl \
     && rm -rf /var/lib/apt/cache/*
 
 WORKDIR /app
@@ -22,11 +23,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Install gdown for Google Drive model download
 RUN pip install --no-cache-dir gdown
 
-# Pre-download StrongSORT ReID weights via wget (direct HuggingFace URL).
-# Avoids relying on boxmot's internal download behavior, which changed in v19.
+# Pre-download StrongSORT ReID weights via curl (handles HuggingFace redirects).
+# wget fails with exit code 6 on HuggingFace's redirect chain.
 # osnet_x0_25_msmt17.pt is ~2.2 MB.
-RUN wget -q --show-progress \
-    -O /app/osnet_x0_25_msmt17.pt \
+RUN curl -fSL -o /app/osnet_x0_25_msmt17.pt \
     "https://huggingface.co/mikel-brostrom/boxmot/resolve/main/osnet_x0_25_msmt17.pt" && \
     echo "ReID weights ready: $(du -sh /app/osnet_x0_25_msmt17.pt)"
 
