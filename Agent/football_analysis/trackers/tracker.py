@@ -10,7 +10,6 @@ sys.path.append('../')
 from utils import get_center_of_bbox, get_bbox_width, get_foot_position
 from pathlib import Path
 from boxmot.trackers.strongsort.strongsort import StrongSort
-from boxmot.appearance.reid_auto_backend import ReidAutoBackend
 
 import torch
 
@@ -20,16 +19,21 @@ class Tracker:
         self.device = 'cpu'  # Railway has no GPU
         self.model = YOLO(model_path)
 
-        # boxmot v18+ API: build the ReID model first, then pass to StrongSort.
-        # ReidAutoBackend auto-downloads the weights on first use (same as Colab).
-        reid_weights = Path("osnet_x0_25_msmt17.pt")
-        reid_model = ReidAutoBackend(
-            weights=reid_weights,
-            device=self.device,
-            half=False,
-        )
-
-        self.tracker = StrongSort(reid_model=reid_model)
+        # boxmot API changed across versions. Try the old API first (v10),
+        # then fall back to the new API (v18+) if it fails at runtime.
+        reid_path = Path("osnet_x0_25_msmt17.pt")
+        try:
+            # New API (v18+): build ReID model object, pass to StrongSort
+            from boxmot.appearance.reid_auto_backend import ReidAutoBackend
+            reid_model = ReidAutoBackend(
+                weights=reid_path, device=self.device, half=False,
+            )
+            self.tracker = StrongSort(reid_model=reid_model)
+        except (ImportError, ModuleNotFoundError):
+            # Old API (v10): pass path directly, boxmot handles download
+            self.tracker = StrongSort(
+                reid_weights=reid_path, device=self.device, half=False,
+            )
 
     def add_position_to_tracks(self, tracks):
         for object, object_tracks in tracks.items():
