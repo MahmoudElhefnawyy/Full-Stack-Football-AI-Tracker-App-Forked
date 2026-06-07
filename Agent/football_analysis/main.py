@@ -63,6 +63,19 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     # Read Video
     video_frames = read_video(input_video_path)
 
+    # ── Resize to 720p if needed to fit within 8 GB Railway limit ──────────
+    # 750 frames × 1080p = ~4.7 GB.  At 720p = ~2.1 GB (saves ~2.5 GB).
+    # YOLO accuracy is unaffected — it internally resizes to 384×640.
+    _MAX_HEIGHT = 720
+    h, w = video_frames[0].shape[:2]
+    if h > _MAX_HEIGHT:
+        scale = _MAX_HEIGHT / h
+        new_w, new_h = int(w * scale), _MAX_HEIGHT
+        print(f"Resizing {w}×{h} → {new_w}×{new_h} to fit in 8 GB memory...")
+        for i in range(len(video_frames)):
+            video_frames[i] = cv2.resize(video_frames[i], (new_w, new_h))
+        _free_memory()
+
     # Initialize Tracker
     # Use absolute path relative to this file for production stability
     model_path = os.path.join(os.path.dirname(__file__), 'models', 'best.pt')
