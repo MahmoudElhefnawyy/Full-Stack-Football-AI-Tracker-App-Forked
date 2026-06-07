@@ -112,7 +112,29 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
 
     team_ball_control = np.array(team_ball_control)
 
-    # ── Notion-spec enrichment ─────────────────────────────────────────────
+    # ── Draw output FIRST (before enrichment, to free frames sooner) ──────
+    output_video_frames = tracker.draw_annotations(video_frames, tracks, team_ball_control)
+
+    # ── Free raw video frames — no longer needed (~2-4 GB) ─────────────────
+    total_frames = len(video_frames)
+    del video_frames
+    gc.collect()
+
+    output_video_frames = camera_movement_estimator.draw_camera_movement(
+        output_video_frames, camera_movement_per_frame
+    )
+    speed_and_distance_estimator.draw_speed_and_distance(output_video_frames, tracks)
+
+    # Save annotated video
+    save_video(output_video_frames, output_video_path)
+
+    # ── Free annotated frames — written to disk (~2-4 GB) ──────────────────
+    del output_video_frames
+    del camera_movement_per_frame
+    gc.collect()
+    print("Memory freed after video save.")
+
+    # ── Notion-spec enrichment (runs with only tracks in memory ~50 MB) ────
     print("Running Notion-spec enrichment (time, velocity, ball state, events)...")
 
     # Rule 2: Every point MUST have time
@@ -128,27 +150,6 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     tackles = detect_tackles(tracks, fps=fps)
     fouls = detect_fouls(tracks, fps=fps)
     print(f"  Detected {len(tackles)} tackles, {len(fouls)} possible fouls")
-
-    # ── Draw output ────────────────────────────────────────────────────────
-    output_video_frames = tracker.draw_annotations(video_frames, tracks, team_ball_control)
-
-    # ── Free raw video frames — no longer needed (~1-2 GB) ─────────────────
-    total_frames = len(video_frames)
-    del video_frames
-    gc.collect()
-
-    output_video_frames = camera_movement_estimator.draw_camera_movement(
-        output_video_frames, camera_movement_per_frame
-    )
-    speed_and_distance_estimator.draw_speed_and_distance(output_video_frames, tracks)
-
-    # Save annotated video
-    save_video(output_video_frames, output_video_path)
-
-    # ── Free annotated frames — written to disk ────────────────────────────
-    del output_video_frames
-    gc.collect()
-    print("Memory freed after video save.")
 
     # ── Build enrichment dict ──────────────────────────────────────────────
     enrichment = {
