@@ -295,7 +295,7 @@ def export_to_match_data(
         })
 
     # ── Step 10: Assemble final MatchData JSON ─────────────────────────────
-    match_id = f"ai_{task_id}"
+    match_id = task_id
     match_data = {
         "id": match_id,
         "date": datetime.now().strftime("%Y-%m-%d"),
