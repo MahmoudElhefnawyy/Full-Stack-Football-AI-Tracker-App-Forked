@@ -60,6 +60,11 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     # Get object positions
     tracker.add_position_to_tracks(tracks)
 
+    # ── Free YOLO model + StrongSort/ReID (~500 MB) — tracking is done ────
+    del tracker.model
+    del tracker.tracker
+    gc.collect()
+
     # Camera movement estimator
     print("Estimating camera movement...")
     camera_movement_estimator = CameraMovementEstimator(video_frames[0])
@@ -71,6 +76,7 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     # View Transformer (pixel → real-world metres)
     view_transformer = ViewTransformer()
     view_transformer.add_transformed_position_to_tracks(tracks)
+    del view_transformer  # no longer needed
 
     # ── Interpolate Ball Positions (with interpolation mask — Rule 5) ──────
     # Capture which frames had real detections BEFORE interpolation fills gaps
@@ -78,10 +84,14 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     tracks["ball"] = tracker.interpolate_ball_positions(tracks["ball"])
     # Tag each ball entry with interpolated=True/False
     apply_interpolation_flags(tracks, ball_interpolation_mask)
+    del ball_interpolation_mask  # no longer needed
 
     # Speed and distance estimator (now uses actual video FPS)
     speed_and_distance_estimator = SpeedAndDistance_Estimator(frame_rate=int(fps))
     speed_and_distance_estimator.add_speed_and_distance_to_tracks(tracks)
+
+    gc.collect()
+    print("Models freed — starting team assignment...")
 
     # Assign Player Teams (no warm-up call needed — rule-based assigner)
     print("Assigning teams...")
