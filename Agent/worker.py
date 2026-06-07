@@ -116,7 +116,7 @@ def analyze_video_task(task_id: str, input_path: str,
         local_output_path = os.path.join(AGENT_OUTPUT_DIR, filename)
 
         # 4. Run the full AI analysis pipeline
-        tracks, team_ball_control = run_analysis(
+        tracks, team_ball_control, enrichment = run_analysis(
             local_input_path,
             local_output_path,
             team_names=[home_team_name, away_team_name],
@@ -135,7 +135,26 @@ def analyze_video_task(task_id: str, input_path: str,
             backend_data_dir=agent_data_dir,
             home_team_name=home_team_name,
             away_team_name=away_team_name,
+            tackles=enrichment.get("tackles", []),
+            fouls=enrichment.get("fouls", []),
+            fps=enrichment.get("fps", 24.0),
         )
+
+        # 5b. Export Notion-spec JSON (local audit files — not pushed to Backend)
+        try:
+            from football_analysis.notion_exporter import export_notion_json
+            notion_dir = os.path.join(agent_data_dir, f"{match_id}_notion")
+            export_notion_json(
+                tracks=tracks,
+                team_ball_control=team_ball_control,
+                events=enrichment,
+                fps=enrichment.get("fps", 24.0),
+                output_dir=notion_dir,
+                team_names=[home_team_name, away_team_name],
+                match_id=match_id,
+            )
+        except Exception as notion_err:
+            print(f"[Worker] WARNING: Notion export failed (non-fatal): {notion_err}")
 
         # 6. Push JSON to Backend API so it's stored on the Backend's volume.
         #    The Agent and Backend have separate containers/volumes, so writing
@@ -162,6 +181,8 @@ def analyze_video_task(task_id: str, input_path: str,
                 "completed": True,
                 "match_id": match_id,
                 "json_path": json_path,
+                "tackles_detected": len(enrichment.get("tackles", [])),
+                "fouls_detected": len(enrichment.get("fouls", [])),
             }
             session.commit()
 

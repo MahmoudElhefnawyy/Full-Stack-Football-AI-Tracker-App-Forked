@@ -119,14 +119,15 @@ class Tracker:
             for frame_detection in detection_with_tracks:
                 bbox = frame_detection[:4].tolist()
                 track_id = int(frame_detection[4])
+                conf = round(float(frame_detection[5]), 3)  # detection confidence
                 cls_id = int(round(frame_detection[6]))
 
                 if cls_id == player_cls or cls_id == goalkeeper_cls:
-                    tracks["players"][frame_num][track_id] = {"bbox": bbox}
+                    tracks["players"][frame_num][track_id] = {"bbox": bbox, "confidence": conf}
                 elif cls_id == referee_cls:
                     # Cap referees at 3 to filter false positives
                     if len(tracks["referees"][frame_num]) < 3:
-                        tracks["referees"][frame_num][track_id] = {"bbox": bbox}
+                        tracks["referees"][frame_num][track_id] = {"bbox": bbox, "confidence": conf}
             
             for frame_detection in detection_supervision:
                 bbox = frame_detection[0].tolist()

@@ -7,6 +7,15 @@ from player_ball_assigner import PlayerBallAssigner
 from camera_movement_estimator import CameraMovementEstimator
 from view_transformer import ViewTransformer
 from speed_and_distance_estimator import SpeedAndDistance_Estimator
+from pipeline_enrichment import (
+    add_time_to_tracks,
+    add_velocity_to_tracks,
+    compute_ball_interpolation_mask,
+    apply_interpolation_flags,
+    add_ball_state,
+    detect_tackles,
+    detect_fouls,
+)
 
 import os
 
@@ -22,12 +31,19 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
                     Defaults to ["Team A", "Team B"].
 
     Returns:
-        Tuple of (tracks, team_ball_control) where:
+        Tuple of (tracks, team_ball_control, enrichment) where:
           - tracks: dict of per-frame tracking data for players, referees, ball
           - team_ball_control: numpy array of frame-level team possession (1 or 2)
+          - enrichment: dict with fps, tackles, fouls, total_frames
     """
     if team_names is None:
         team_names = ["Team A", "Team B"]
+
+    # ── Get video FPS for time calculations ────────────────────────────────
+    cap = cv2.VideoCapture(input_video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS) or 24.0
+    cap.release()
+    print(f"Video FPS: {fps}")
 
     # Read Video
     video_frames = read_video(input_video_path)
@@ -55,11 +71,15 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     view_transformer = ViewTransformer()
     view_transformer.add_transformed_position_to_tracks(tracks)
 
-    # Interpolate Ball Positions
+    # ── Interpolate Ball Positions (with interpolation mask — Rule 5) ──────
+    # Capture which frames had real detections BEFORE interpolation fills gaps
+    ball_interpolation_mask = compute_ball_interpolation_mask(tracks)
     tracks["ball"] = tracker.interpolate_ball_positions(tracks["ball"])
+    # Tag each ball entry with interpolated=True/False
+    apply_interpolation_flags(tracks, ball_interpolation_mask)
 
-    # Speed and distance estimator
-    speed_and_distance_estimator = SpeedAndDistance_Estimator()
+    # Speed and distance estimator (now uses actual video FPS)
+    speed_and_distance_estimator = SpeedAndDistance_Estimator(frame_rate=int(fps))
     speed_and_distance_estimator.add_speed_and_distance_to_tracks(tracks)
 
     # Assign Player Teams (no warm-up call needed — rule-based assigner)
@@ -91,7 +111,24 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
 
     team_ball_control = np.array(team_ball_control)
 
-    # Draw output
+    # ── Notion-spec enrichment ─────────────────────────────────────────────
+    print("Running Notion-spec enrichment (time, velocity, ball state, events)...")
+
+    # Rule 2: Every point MUST have time
+    add_time_to_tracks(tracks, fps)
+
+    # Velocity vectors: vx, vy, speed_mps, direction_deg
+    add_velocity_to_tracks(tracks, fps)
+
+    # Ball state: in_play/out_of_bounds, possessed_by
+    add_ball_state(tracks)
+
+    # Event detection: tackles and fouls
+    tackles = detect_tackles(tracks, fps=fps)
+    fouls = detect_fouls(tracks, fps=fps)
+    print(f"  Detected {len(tackles)} tackles, {len(fouls)} possible fouls")
+
+    # ── Draw output ────────────────────────────────────────────────────────
     output_video_frames = tracker.draw_annotations(video_frames, tracks, team_ball_control)
     output_video_frames = camera_movement_estimator.draw_camera_movement(
         output_video_frames, camera_movement_per_frame
@@ -101,7 +138,15 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     # Save annotated video
     save_video(output_video_frames, output_video_path)
 
-    return tracks, team_ball_control
+    # ── Build enrichment dict ──────────────────────────────────────────────
+    enrichment = {
+        "fps": fps,
+        "tackles": tackles,
+        "fouls": fouls,
+        "total_frames": len(video_frames),
+    }
+
+    return tracks, team_ball_control, enrichment
 
 
 if __name__ == '__main__':
