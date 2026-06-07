@@ -1,5 +1,6 @@
 from utils import read_video, save_video
 from trackers import Tracker
+import ctypes
 import gc
 import cv2
 import numpy as np
@@ -19,6 +20,19 @@ from pipeline_enrichment import (
 )
 
 import os
+
+
+def _free_memory():
+    """Force Python AND the OS to release freed memory.
+    gc.collect() alone only marks Python objects as free — the OS still
+    counts the pages as used.  malloc_trim(0) asks glibc to return
+    those pages, which prevents OOM kills on Railway.
+    """
+    gc.collect()
+    try:
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except (OSError, AttributeError):
+        pass  # not Linux / no glibc
 
 
 def run_analysis(input_video_path, output_video_path, team_names=None):
@@ -63,7 +77,7 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     # ── Free YOLO model + StrongSort/ReID (~500 MB) — tracking is done ────
     del tracker.model
     del tracker.tracker
-    gc.collect()
+    _free_memory()
 
     # Camera movement estimator
     print("Estimating camera movement...")
@@ -90,7 +104,7 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     speed_and_distance_estimator = SpeedAndDistance_Estimator(frame_rate=int(fps))
     speed_and_distance_estimator.add_speed_and_distance_to_tracks(tracks)
 
-    gc.collect()
+    _free_memory()
     print("Models freed — starting team assignment...")
 
     # Assign Player Teams (no warm-up call needed — rule-based assigner)
@@ -128,7 +142,7 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     # ── Free raw video frames — no longer needed (~2-4 GB) ─────────────────
     total_frames = len(video_frames)
     del video_frames
-    gc.collect()
+    _free_memory()
 
     output_video_frames = camera_movement_estimator.draw_camera_movement(
         output_video_frames, camera_movement_per_frame
@@ -141,7 +155,7 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     # ── Free annotated frames — written to disk (~2-4 GB) ──────────────────
     del output_video_frames
     del camera_movement_per_frame
-    gc.collect()
+    _free_memory()
     print("Memory freed after video save.")
 
     # ── Notion-spec enrichment (runs with only tracks in memory ~50 MB) ────
