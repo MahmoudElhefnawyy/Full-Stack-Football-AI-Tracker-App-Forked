@@ -1,5 +1,6 @@
 from utils import read_video, save_video
 from trackers import Tracker
+import gc
 import cv2
 import numpy as np
 from team_assigner import TeamAssigner
@@ -130,6 +131,12 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
 
     # ── Draw output ────────────────────────────────────────────────────────
     output_video_frames = tracker.draw_annotations(video_frames, tracks, team_ball_control)
+
+    # ── Free raw video frames — no longer needed (~1-2 GB) ─────────────────
+    total_frames = len(video_frames)
+    del video_frames
+    gc.collect()
+
     output_video_frames = camera_movement_estimator.draw_camera_movement(
         output_video_frames, camera_movement_per_frame
     )
@@ -138,12 +145,17 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     # Save annotated video
     save_video(output_video_frames, output_video_path)
 
+    # ── Free annotated frames — written to disk ────────────────────────────
+    del output_video_frames
+    gc.collect()
+    print("Memory freed after video save.")
+
     # ── Build enrichment dict ──────────────────────────────────────────────
     enrichment = {
         "fps": fps,
         "tackles": tackles,
         "fouls": fouls,
-        "total_frames": len(video_frames),
+        "total_frames": total_frames,
     }
 
     return tracks, team_ball_control, enrichment
