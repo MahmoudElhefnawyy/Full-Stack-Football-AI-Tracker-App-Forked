@@ -9,7 +9,12 @@ import sys
 sys.path.append('../')
 from utils import get_center_of_bbox, get_bbox_width, get_foot_position
 from pathlib import Path
-from boxmot.trackers.strongsort.strongsort import StrongSort
+try:
+    # boxmot v19+: trackers reorganized under bbox/
+    from boxmot.trackers.bbox.strongsort.strongsort import StrongSort
+except (ImportError, ModuleNotFoundError):
+    # boxmot v18 and earlier: old flat layout
+    from boxmot.trackers.strongsort.strongsort import StrongSort
 
 import torch
 
