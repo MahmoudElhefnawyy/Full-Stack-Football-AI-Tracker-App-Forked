@@ -14,7 +14,8 @@ pydantic
 pydantic-settings
 
 # StrongSort tracker with ReID support (appearance-based re-identification)
-boxmot
+# PINNED: v19+ removed boxmot.trackers.strongsort entirely.
+boxmot==10.0.79
 torch
 torchvision
 

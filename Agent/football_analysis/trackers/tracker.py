@@ -9,20 +9,7 @@ import sys
 sys.path.append('../')
 from utils import get_center_of_bbox, get_bbox_width, get_foot_position
 from pathlib import Path
-try:
-    from boxmot.trackers.strongsort.strongsort import StrongSort
-except (ImportError, ModuleNotFoundError):
-    try:
-        # boxmot v20: module renamed to strong_sort.py, class to StrongSORT
-        from boxmot.trackers.strongsort.strong_sort import StrongSORT as StrongSort
-    except (ImportError, ModuleNotFoundError):
-        try:
-            from boxmot.trackers.strongsort import StrongSort
-        except (ImportError, ModuleNotFoundError):
-            try:
-                from boxmot import StrongSORT as StrongSort
-            except (ImportError, ModuleNotFoundError):
-                from boxmot import StrongSort
+from boxmot.trackers.strongsort.strongsort import StrongSort
 
 import torch
 
