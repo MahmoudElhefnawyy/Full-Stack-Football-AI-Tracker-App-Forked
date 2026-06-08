@@ -254,7 +254,7 @@ def detect_fouls(
     tracks: dict,
     fps: float = 24.0,
     distance_threshold_m: float = 1.0,
-    speed_drop_threshold: float = 3.0,
+    speed_drop_threshold: float = 2.0,
 ) -> list[dict]:
     """
     Detect possible fouls using the Notion rule-based approach:

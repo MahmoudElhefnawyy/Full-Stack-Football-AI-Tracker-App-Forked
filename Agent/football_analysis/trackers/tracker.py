@@ -58,23 +58,43 @@ class Tracker:
                         position = get_foot_position(bbox)
                     tracks[object][frame_num][track_id]['position'] = position
 
-    def interpolate_ball_positions(self,ball_positions):
-        ball_positions = [x.get(1,{}).get('bbox',[]) for x in ball_positions]
-        df_ball_positions = pd.DataFrame(ball_positions,columns=['x1','y1','x2','y2'])
+    def interpolate_ball_positions(self, ball_positions):
+        if not ball_positions:
+            return ball_positions
 
-        # Interpolate missing values
-        df_ball_positions = df_ball_positions.interpolate()
-        df_ball_positions = df_ball_positions.bfill()
+        normalized_positions = []
+        for frame_ball in ball_positions:
+            bbox = frame_ball.get(1, {}).get('bbox')
+            if isinstance(bbox, (list, tuple)) and len(bbox) == 4:
+                normalized_positions.append(bbox)
+            else:
+                normalized_positions.append([np.nan, np.nan, np.nan, np.nan])
 
-        ball_positions = [{1: {"bbox":x}} for x in df_ball_positions.to_numpy().tolist()]
+        df_ball_positions = pd.DataFrame(
+            normalized_positions,
+            columns=['x1', 'y1', 'x2', 'y2']
+        )
 
-        return ball_positions
+        if df_ball_positions.dropna(how='all').empty:
+            return [{} for _ in ball_positions]
+
+        df_ball_positions = df_ball_positions.interpolate(limit_direction='both')
+        df_ball_positions = df_ball_positions.bfill().ffill()
+
+        interpolated_positions = []
+        for row in df_ball_positions.to_numpy().tolist():
+            if not np.isfinite(row).all():
+                interpolated_positions.append({})
+            else:
+                interpolated_positions.append({1: {'bbox': [float(row[0]), float(row[1]), float(row[2]), float(row[3])]}})
+
+        return interpolated_positions
 
     def detect_frames(self, frames):
         batch_size = 20
         detections = []
         for i in range(0, len(frames), batch_size):
-            detections_batch = self.model.predict(frames[i:i+batch_size], conf=0.5, iou=0.5)
+            detections_batch = self.model.predict(frames[i:i+batch_size], conf=0.5, iou=0.35)
             detections += detections_batch
         return detections
 
