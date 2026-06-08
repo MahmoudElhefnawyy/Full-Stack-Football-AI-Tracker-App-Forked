@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from app.core.exceptions import NotFoundException
 from app.models.responses import ApiResponse
-from app.models.schemas import MatchDetailSchema, MatchOverviewSchema, MatchSummarySchema, MatchEventSchema
+from app.models.schemas import MatchDetailSchema, MatchOverviewSchema, MatchSummarySchema
 from app.services.analytics_service import analytics_service
 from app.services.json_loader import load_matches
 
@@ -44,13 +44,6 @@ async def get_match(match_id: str) -> ApiResponse:
         away_score=match.away_score,
         status=match.status,
         duration_minutes=match.duration_minutes,
-        events=[
-            MatchEventSchema(
-                id=e.id, time=e.time, type=e.type,
-                player=e.player, team=e.team, description=e.description,
-            )
-            for e in match.events
-        ],
     )
     return ApiResponse.ok(detail)
 

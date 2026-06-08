@@ -197,6 +197,18 @@ class MatchData(BaseModel):
             if away_passes else 0
         )
 
+        # Build computed stats first, then append non-duplicate metadata stats
+        computed_stats = [
+            {"name": "Goals", "home": self.home_score, "away": self.away_score},
+            {"name": "Possession", "home": home_poss, "away": away_poss},
+            {"name": "Pass Accuracy", "home": home_acc, "away": away_acc},
+        ]
+        computed_names = {s["name"] for s in computed_stats}
+        metadata_stats = [
+            s for s in self.metadata.get("stats", [])
+            if s.get("name") not in computed_names
+        ]
+
         return {
             "match_id": self.id,
             "date": self.date,
@@ -206,14 +218,14 @@ class MatchData(BaseModel):
             "away_score": self.away_score,
             "status": self.status,
             "possession": {
-                "home": home_poss,
-                "away": away_poss,
+                self.home_team.name: home_poss,
+                self.away_team.name: away_poss,
             },
             "pass_accuracy": {
-                "home": home_acc,
-                "away": away_acc,
+                self.home_team.name: home_acc,
+                self.away_team.name: away_acc,
             },
-            "stats": self.metadata.get("stats", {}),
+            "stats": computed_stats + metadata_stats,
         }
 
     def player_lookup(self, player_id: str) -> Optional[PlayerStats]:

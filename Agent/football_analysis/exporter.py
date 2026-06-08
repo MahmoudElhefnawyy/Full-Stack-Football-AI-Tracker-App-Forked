@@ -58,8 +58,6 @@ def export_to_match_data(
     backend_data_dir: str,
     home_team_name: str = "Team A",
     away_team_name: str = "Team B",
-    tackles: Optional[list] = None,
-    fouls: Optional[list] = None,
     fps: float = 24.0,
 ) -> tuple[str, str]:
     """
@@ -73,15 +71,11 @@ def export_to_match_data(
         backend_data_dir:  Absolute path to Backend app/data/ directory.
         home_team_name:    Name for Team 1 (from Upload form).
         away_team_name:    Name for Team 2 (from Upload form).
-        tackles:           List of tackle event dicts from pipeline_enrichment.
-        fouls:             List of foul event dicts from pipeline_enrichment.
         fps:               Video frames per second.
 
     Returns:
         Tuple of (match_id, absolute_json_path).
     """
-    tackles = tackles or []
-    fouls = fouls or []
     # ── Step 1: Run analytics on tracking data ─────────────────────────────
     assign_ball_touches(tracks)
     determine_ball_control(tracks)
@@ -220,82 +214,18 @@ def export_to_match_data(
     home_pass_acc = round(home_passes_count / home_pass_attempted * 100, 1) if home_pass_attempted > 0 else 0
     away_pass_acc = round(away_passes_count / away_pass_attempted * 100, 1) if away_pass_attempted > 0 else 0
 
-    # Tackle and foul counts per team
-    home_tackles = 0
-    away_tackles = 0
-    for t in tackles:
-        winner = t["players"]["winner"]
-        frame = t.get("frame", 0)
-        if frame < len(tracks["players"]):
-            winner_info = tracks["players"][frame].get(winner, {})
-            if winner_info.get("team") == 1:
-                home_tackles += 1
-            else:
-                away_tackles += 1
-
-    home_fouls = 0
-    away_fouls = 0
-    for f in fouls:
-        attacker = f["players"]["attacker"]
-        frame = f.get("frame", 0)
-        if frame < len(tracks["players"]):
-            attacker_info = tracks["players"][frame].get(attacker, {})
-            if attacker_info.get("team") == 1:
-                home_fouls += 1
-            else:
-                away_fouls += 1
-
     metadata_stats = [
         {"name": "Passes", "home": home_passes_count, "away": away_passes_count},
         {"name": "Turnovers", "home": home_turnovers_count, "away": away_turnovers_count},
         {"name": "Possession", "home": team_1_pct, "away": team_2_pct},
         {"name": "Pass Accuracy", "home": home_pass_acc, "away": away_pass_acc},
-        {"name": "Tackles", "home": home_tackles, "away": away_tackles},
-        {"name": "Fouls", "home": home_fouls, "away": away_fouls},
         # Not detectable by current YOLO model, but provides structure for future
         {"name": "Shots", "home": 0, "away": 0},
         {"name": "Corner Kicks", "home": 0, "away": 0},
     ]
 
-    # ── Step 9b: Build MatchEvent objects from tackles and fouls ───────────
+    # ── Step 9b: Events array (empty — pass/turnover data in separate arrays) ─
     backend_events = []
-    for t in tackles:
-        winner = t["players"]["winner"]
-        loser = t["players"]["loser"]
-        frame = t.get("frame", 0)
-        winner_team = "team_1"
-        if frame < len(tracks["players"]):
-            winner_info = tracks["players"][frame].get(winner, {})
-            winner_team = team_id_map.get(winner_info.get("team", 1), "team_1")
-        time_sec = t.get("time", 0)
-        time_str = f"{int(time_sec // 60)}'{int(time_sec % 60)}\""
-        backend_events.append({
-            "id": len(backend_events) + 1,
-            "time": time_str,
-            "type": "Tackle",
-            "player": f"Player #{winner}",
-            "team": team_name_map.get(1 if winner_team == "team_1" else 2, home_team_name),
-            "description": f"Tackle won against Player #{loser} (confidence: {t.get('confidence', 0):.0%})",
-        })
-
-    for f_evt in fouls:
-        attacker = f_evt["players"]["attacker"]
-        defender = f_evt["players"]["defender"]
-        frame = f_evt.get("frame", 0)
-        attacker_team = "team_1"
-        if frame < len(tracks["players"]):
-            att_info = tracks["players"][frame].get(attacker, {})
-            attacker_team = team_id_map.get(att_info.get("team", 1), "team_1")
-        time_sec = f_evt.get("time", 0)
-        time_str = f"{int(time_sec // 60)}'{int(time_sec % 60)}\""
-        backend_events.append({
-            "id": len(backend_events) + 1,
-            "time": time_str,
-            "type": "Foul",
-            "player": f"Player #{attacker}",
-            "team": team_name_map.get(1 if attacker_team == "team_1" else 2, home_team_name),
-            "description": f"Possible foul on Player #{defender} (confidence: {f_evt.get('confidence', 0):.0%})",
-        })
 
     # ── Step 10: Assemble final MatchData JSON ─────────────────────────────
     match_id = task_id

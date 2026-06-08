@@ -15,8 +15,6 @@ from pipeline_enrichment import (
     compute_ball_interpolation_mask,
     apply_interpolation_flags,
     add_ball_state,
-    detect_tackles,
-    detect_fouls,
 )
 
 import os
@@ -183,16 +181,9 @@ def run_analysis(input_video_path, output_video_path, team_names=None):
     # Ball state: in_play/out_of_bounds, possessed_by
     add_ball_state(tracks)
 
-    # Event detection: tackles and fouls
-    tackles = detect_tackles(tracks, fps=fps)
-    fouls = detect_fouls(tracks, fps=fps)
-    print(f"  Detected {len(tackles)} tackles, {len(fouls)} possible fouls")
-
     # ── Build enrichment dict ──────────────────────────────────────────────
     enrichment = {
         "fps": fps,
-        "tackles": tackles,
-        "fouls": fouls,
         "total_frames": total_frames,
     }
 

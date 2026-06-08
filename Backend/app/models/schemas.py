@@ -145,7 +145,6 @@ class MatchSummarySchema(CamelModel):
 
 class MatchDetailSchema(MatchSummarySchema):
     duration_minutes: int
-    events: list[MatchEventSchema]
 
 
 class MatchOverviewSchema(CamelModel):

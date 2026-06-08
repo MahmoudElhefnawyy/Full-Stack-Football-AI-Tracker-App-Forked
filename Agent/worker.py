@@ -135,8 +135,6 @@ def analyze_video_task(task_id: str, input_path: str,
             backend_data_dir=agent_data_dir,
             home_team_name=home_team_name,
             away_team_name=away_team_name,
-            tackles=enrichment.get("tackles", []),
-            fouls=enrichment.get("fouls", []),
             fps=enrichment.get("fps", 24.0),
         )
 
@@ -181,8 +179,6 @@ def analyze_video_task(task_id: str, input_path: str,
                 "completed": True,
                 "match_id": match_id,
                 "json_path": json_path,
-                "tackles_detected": len(enrichment.get("tackles", [])),
-                "fouls_detected": len(enrichment.get("fouls", [])),
             }
             session.commit()
 
