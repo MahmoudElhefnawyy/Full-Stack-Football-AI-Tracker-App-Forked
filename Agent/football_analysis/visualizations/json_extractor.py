@@ -64,12 +64,76 @@ def determine_ball_control(tracks):
         previous_team_with_ball = current_team
 
 
+# ── Temporal-Smoothed Possession Map ──────────────────────────────────────────
+
+def build_possession_map(tracks, min_frames=6, max_loose_frames=15):
+    """
+    Build a frame-level possession map with temporal smoothing.
+
+    A new possessor must hold the ball for at least `min_frames` consecutive
+    frames before being registered.  If nobody is detected near the ball for
+    `max_loose_frames`, possession resets.
+
+    Returns:
+        dict[int, dict]: frame_num → {"player_id": int, "team_id": int}
+    """
+    player_tracks = tracks.get("players", [])
+    result = {}
+
+    active_possessor = None   # confirmed possessor
+    loose_counter = 0
+
+    candidate_id = None
+    candidate_team = None
+    candidate_count = 0
+
+    for frame_num, frame_data in enumerate(player_tracks):
+        detected_id = None
+        detected_team = None
+
+        for player_id, track in frame_data.items():
+            if track.get("has_ball"):
+                detected_id = player_id
+                detected_team = int(track.get("team", 0))
+                break
+
+        if detected_id is not None:
+            loose_counter = 0
+            if active_possessor is None or active_possessor["player_id"] != detected_id:
+                if candidate_id == detected_id:
+                    candidate_count += 1
+                    if candidate_count >= min_frames:
+                        active_possessor = {"player_id": detected_id, "team_id": detected_team}
+                        candidate_id = None
+                        candidate_count = 0
+                else:
+                    candidate_id = detected_id
+                    candidate_team = detected_team
+                    candidate_count = 1
+            else:
+                # Same player still holding — reset candidate
+                candidate_id = None
+                candidate_count = 0
+        else:
+            candidate_id = None
+            candidate_count = 0
+            loose_counter += 1
+            if loose_counter >= max_loose_frames:
+                active_possessor = None
+
+        if active_possessor is not None:
+            result[frame_num] = active_possessor
+
+    return result
+
+
 # ── Pass & Turnover Detection ─────────────────────────────────────────────────
 
 def detect_passes(tracks, distance_threshold=120, release_frames=3):
     """
     Detect passes (same-team possession transfer) and turnovers
-    (cross-team possession transfer) from tracking data.
+    (cross-team possession transfer) using the temporal-smoothed
+    possession map.
 
     Returns:
         passes: list of dicts with keys: frame_start, frame_end,
@@ -78,51 +142,45 @@ def detect_passes(tracks, distance_threshold=120, release_frames=3):
                    losing_player_id, gaining_player_id,
                    losing_team, gaining_team
     """
+    possession_map = build_possession_map(tracks)
     passes = []
     turnovers = []
-    current_owner = None
-    frames_away = 0
-    release_frame = None
-    passer = None
 
-    for frame_num, player_track in enumerate(tracks['players']):
-        frame_owner = None
-        for player_id, track in player_track.items():
-            if track.get('has_ball', False):
-                frame_owner = {"player_id": player_id, "team": track.get("team")}
-                break
+    prev_possessor = None
+    prev_team = None
+    prev_frame = None
 
-        if frame_owner is None:
-            if current_owner is not None:
-                frames_away += 1
-                if frames_away >= release_frames and passer is None:
-                    passer = current_owner
-                    release_frame = frame_num
-        else:
-            if passer is not None:
-                if frame_owner["player_id"] != passer["player_id"]:
-                    if frame_owner["team"] == passer["team"]:
-                        passes.append({
-                            "frame_start": release_frame,
-                            "frame_end": frame_num,
-                            "passer_id": passer["player_id"],
-                            "receiver_id": frame_owner["player_id"],
-                            "team": passer["team"],
-                        })
-                    else:
-                        turnovers.append({
-                            "frame_start": release_frame,
-                            "frame_end": frame_num,
-                            "losing_player_id": passer["player_id"],
-                            "gaining_player_id": frame_owner["player_id"],
-                            "losing_team": passer["team"],
-                            "gaining_team": frame_owner["team"],
-                        })
-                passer = None
-                release_frame = None
+    for frame_num in sorted(possession_map.keys()):
+        poss = possession_map[frame_num]
+        current_possessor = poss["player_id"]
+        current_team = poss["team_id"]
 
-            current_owner = frame_owner
-            frames_away = 0
+        if (
+            prev_possessor is not None
+            and current_possessor is not None
+            and current_possessor != prev_possessor
+        ):
+            if prev_team == current_team:
+                passes.append({
+                    "frame_start": prev_frame,
+                    "frame_end": frame_num,
+                    "passer_id": prev_possessor,
+                    "receiver_id": current_possessor,
+                    "team": current_team,
+                })
+            else:
+                turnovers.append({
+                    "frame_start": prev_frame,
+                    "frame_end": frame_num,
+                    "losing_player_id": prev_possessor,
+                    "gaining_player_id": current_possessor,
+                    "losing_team": prev_team,
+                    "gaining_team": current_team,
+                })
+
+        prev_possessor = current_possessor
+        prev_team = current_team
+        prev_frame = frame_num
 
     return passes, turnovers
 
