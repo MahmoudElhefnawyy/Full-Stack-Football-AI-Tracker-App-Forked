@@ -219,9 +219,6 @@ def export_to_match_data(
         {"name": "Turnovers", "home": home_turnovers_count, "away": away_turnovers_count},
         {"name": "Possession", "home": team_1_pct, "away": team_2_pct},
         {"name": "Pass Accuracy", "home": home_pass_acc, "away": away_pass_acc},
-        # Not detectable by current YOLO model, but provides structure for future
-        {"name": "Shots", "home": 0, "away": 0},
-        {"name": "Corner Kicks", "home": 0, "away": 0},
     ]
 
     # ── Step 9b: Events array (empty — pass/turnover data in separate arrays) ─
