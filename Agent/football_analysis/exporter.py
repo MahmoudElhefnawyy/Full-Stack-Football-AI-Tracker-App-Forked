@@ -178,6 +178,7 @@ def export_to_match_data(
 
         # Crude attribute derivation from tracking stats
         avg_speed = float(p.get("avg_speed") or 0)
+        distance_covered = float(p.get("distance_covered") or 0)
         speed_attr = min(99, max(40, int(avg_speed * 3.5)))
         pass_attr = min(99, max(40, int((passes_made / passes_attempted * 100) if passes_attempted > 0 else 70)))
 
@@ -195,6 +196,8 @@ def export_to_match_data(
             "goals": 0,
             "assists": 0,
             "rating": 7.0,
+            "avg_speed_kmh": round(avg_speed, 2),
+            "distance_covered_m": round(distance_covered, 2),
             "attributes": {
                 "speed": speed_attr,
                 "dribbling": 70,

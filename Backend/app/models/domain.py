@@ -98,6 +98,8 @@ class PlayerStats(BaseModel):
     goals: int = 0
     assists: int = 0
     rating: float = 7.0
+    avg_speed_kmh: float = 0.0
+    distance_covered_m: float = 0.0
     attributes: PlayerAttributes = Field(default_factory=PlayerAttributes)
 
     @computed_field  # type: ignore[misc]

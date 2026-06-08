@@ -266,6 +266,10 @@ def detect_fouls(
         List of foul event dicts matching the Notion schema.
     """
     fouls: list[dict] = []
+    # Deduplication: track the last foul frame per player pair (attacker, victim)
+    # to avoid firing 20+ events for a single 1-second contact
+    _dedup_window = int(fps)  # 1 second worth of frames
+    _last_foul_frame: dict[tuple, int] = {}
 
     for frame_num in range(2, len(tracks["players"])):
         curr_frame = tracks["players"][frame_num]
@@ -303,6 +307,12 @@ def detect_fouls(
                 )
 
                 if dist < distance_threshold_m:
+                    # Dedup: skip if same pair had a foul within 1 second
+                    pair_key = (min(pid_attacker, pid_victim), max(pid_attacker, pid_victim))
+                    last_frame = _last_foul_frame.get(pair_key, -9999)
+                    if frame_num - last_frame < _dedup_window:
+                        break  # Skip — same incident
+
                     # Check ball not cleanly won by attacker
                     ball_owner = None
                     for p, i in curr_frame.items():
@@ -311,6 +321,7 @@ def detect_fouls(
                             break
 
                     if ball_owner != pid_attacker:
+                        _last_foul_frame[pair_key] = frame_num
                         fouls.append(
                             {
                                 "id": f"foul_{len(fouls) + 1:04d}",

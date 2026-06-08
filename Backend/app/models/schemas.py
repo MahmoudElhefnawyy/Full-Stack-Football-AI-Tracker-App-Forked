@@ -51,6 +51,8 @@ class PlayerSummarySchema(CamelModel):
     rating: float
     goals: int
     assists: int
+    avg_speed_kmh: float = 0.0
+    distance_covered_m: float = 0.0
 
 
 class PlayerDetailSchema(PlayerSummarySchema):

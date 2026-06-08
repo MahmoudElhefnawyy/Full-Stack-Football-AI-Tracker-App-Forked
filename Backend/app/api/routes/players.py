@@ -57,6 +57,8 @@ async def list_players() -> ApiResponse:
             rating=p.rating,
             goals=p.goals,
             assists=p.assists,
+            avg_speed_kmh=p.avg_speed_kmh,
+            distance_covered_m=p.distance_covered_m,
         )
         for p in players
     ]
@@ -74,6 +76,8 @@ async def get_player(player_id: str) -> ApiResponse:
             team_name=player.team_name, position=player.position,
             number=player.number, rating=player.rating,
             goals=player.goals, assists=player.assists,
+            avg_speed_kmh=player.avg_speed_kmh,
+            distance_covered_m=player.distance_covered_m,
         )
     )
 
