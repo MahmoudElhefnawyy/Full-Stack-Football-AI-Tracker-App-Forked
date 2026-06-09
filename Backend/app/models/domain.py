@@ -91,7 +91,7 @@ class PlayerStats(BaseModel):
     team_name: str
     position: str
     number: int = 0
-    minutes_played: int = 90
+    minutes_played: float = 0
     passes_attempted: int = 0
     passes_completed: int = 0
     turnovers: int = 0

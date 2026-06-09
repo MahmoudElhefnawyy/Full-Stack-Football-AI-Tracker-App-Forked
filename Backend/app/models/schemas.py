@@ -56,7 +56,7 @@ class PlayerSummarySchema(CamelModel):
 
 
 class PlayerDetailSchema(PlayerSummarySchema):
-    minutes_played: int
+    minutes_played: float
     passes_attempted: int
     passes_completed: int
     turnovers: int
@@ -144,7 +144,7 @@ class MatchSummarySchema(CamelModel):
 
 
 class MatchDetailSchema(MatchSummarySchema):
-    duration_minutes: int
+    duration_minutes: float
 
 
 class MatchOverviewSchema(CamelModel):

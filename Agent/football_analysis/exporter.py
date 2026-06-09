@@ -151,11 +151,13 @@ def export_to_match_data(
             backend_positions[pid] = pos_list
 
     # ── Step 7: Build Possession Segments ─────────────────────────────────
-    team_1_mins = round(team_1_pct / 100 * 90)
-    team_2_mins = 90 - team_1_mins
+    total_frames = len(tracks.get("players", []))
+    actual_duration = round(total_frames / max(fps, 1) / 60, 1)
+    team_1_mins = round(team_1_pct / 100 * actual_duration)
+    team_2_mins = round(actual_duration - team_1_mins, 1)
     possession_segments = [
         {"team_id": "team_1", "start_minute": 0, "end_minute": team_1_mins},
-        {"team_id": "team_2", "start_minute": team_1_mins, "end_minute": 90},
+        {"team_id": "team_2", "start_minute": team_1_mins, "end_minute": actual_duration},
     ]
 
     # ── Step 8: Build embedded PlayerStats ────────────────────────────────
@@ -183,7 +185,7 @@ def export_to_match_data(
             "team_name": team_name,
             "position": "Unknown",
             "number": 0,
-            "minutes_played": 90,
+            "minutes_played": round(len(p.get("positions", [])) / max(fps, 1) / 60, 1),
             "passes_attempted": passes_attempted,
             "passes_completed": passes_made,
             "turnovers": turnovers_count,
@@ -233,7 +235,7 @@ def export_to_match_data(
         "away_team": {"id": "team_2", "name": away_team_name, "emoji": "🚌"},
         "home_score": 0,
         "away_score": 0,
-        "duration_minutes": 90,
+        "duration_minutes": round(len(tracks.get("players", [])) / max(fps, 1) / 60, 1),
         "status": "Analyzed",
         "passes": backend_passes,
         "turnovers": backend_turnovers,

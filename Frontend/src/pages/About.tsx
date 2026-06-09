@@ -7,11 +7,11 @@ import StatCard from '../components/ui/StatCard';
 import MarqueeStrip from '../components/ui/MarqueeStrip';
 
 const teamMembers = [
-    { initials: 'SR', name: 'Sarah Al-Rashid', role: 'Project Lead & Full-Stack Developer', desc: 'Led the overall project architecture, developed the core backend APIs, and coordinated the team\'s workflow. Responsible for the authentication system and database design.', tags: ['React', 'Node.js', 'PostgreSQL', 'System Design'] },
-    { initials: 'OK', name: 'Omar Khalil', role: 'Computer Vision Engineer', desc: 'Developed the core AI/ML pipeline for player tracking and ball detection using deep learning models. Implemented the video analysis algorithms powering GoalSense.', tags: ['Python', 'OpenCV', 'TensorFlow', 'YOLO'] },
-    { initials: 'LH', name: 'Layla Hassan', role: 'UI/UX Designer & Frontend Developer', desc: 'Designed the complete UI/UX system including wireframes, prototypes, and the final visual identity. Built responsive frontend components and ensured accessibility standards.', tags: ['Figma', 'React', 'Tailwind CSS', 'Accessibility'] },
-    { initials: 'KM', name: 'Khalid Mansour', role: 'Data Scientist & Analytics Engineer', desc: 'Built the statistical analysis modules, heatmap generation, and performance metrics engine. Created the comparison and recommendation algorithms based on match data.', tags: ['Python', 'Pandas', 'Scikit-Learn', 'D3.js'] },
-    { initials: 'NZ', name: 'Nour Zayed', role: 'Backend Developer & DevOps', desc: 'Developed the video processing pipeline, managed cloud infrastructure, and implemented CI/CD workflows. Responsible for API integration and system performance optimization.', tags: ['Docker', 'Railway', 'FastAPI', 'Redis'] },
+    { initials: 'FM', name: 'Fatema Mostafa', role: 'Machine Learning Engineer', desc: 'Led the overall project architecture, developed the core backend APIs, and coordinated the team\'s workflow. Responsible for the authentication system and database design.', tags: ['React', 'Node.js', 'PostgreSQL', 'System Design'] },
+    { initials: 'MM', name: 'Mahmoud Mohamed', role: 'AI Intgeration Developer', desc: 'Developed the core AI/ML pipeline for player tracking and ball detection using deep learning models. Implemented the video analysis algorithms powering GoalSense.', tags: ['Python', 'OpenCV', 'TensorFlow', 'YOLO'] },
+    { initials: 'MA', name: 'Mohamed Ahmed', role: 'AI Developer & Team Lead', desc: 'Build the AI Model Trackings and Detection prototypes, and the final visual identity. Built responsive frontend components and ensured accessibility standards.', tags: ['Figma', 'React', 'Tailwind CSS', 'Accessibility'] },
+    { initials: 'MW', name: 'Mohamed Waheed', role: 'UI/UX Developer', desc: 'Built the UI/UX For statistical analysis modules, heatmap generation, and performance metrics engine. Created the comparison and recommendation algorithms based on match data.', tags: ['Python', 'Pandas', 'Scikit-Learn', 'D3.js'] },
+    { initials: 'MM', name: 'Mohamed Mahmoud', role: 'AI Enigineer', desc: 'Developed the video processing pipeline, managed cloud infrastructure, and implemented CI/CD workflows. Responsible for API integration and system performance optimization.', tags: ['Docker', 'Railway', 'FastAPI', 'Redis'] },
 ];
 
 const cardVariants = {
