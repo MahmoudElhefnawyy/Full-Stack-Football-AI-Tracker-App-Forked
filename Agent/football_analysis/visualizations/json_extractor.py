@@ -70,6 +70,9 @@ def build_possession_map(tracks, min_frames=6, max_loose_frames=15):
     """
     Build a frame-level possession map with temporal smoothing.
 
+    Uses the **closest** player to the ball (not just the first with has_ball)
+    to avoid dict-ordering bias that always favors the same team.
+
     A new possessor must hold the ball for at least `min_frames` consecutive
     frames before being registered.  If nobody is detected near the ball for
     `max_loose_frames`, possession resets.
@@ -78,6 +81,7 @@ def build_possession_map(tracks, min_frames=6, max_loose_frames=15):
         dict[int, dict]: frame_num → {"player_id": int, "team_id": int}
     """
     player_tracks = tracks.get("players", [])
+    ball_tracks = tracks.get("ball", [])
     result = {}
 
     active_possessor = None   # confirmed possessor
@@ -91,11 +95,27 @@ def build_possession_map(tracks, min_frames=6, max_loose_frames=15):
         detected_id = None
         detected_team = None
 
-        for player_id, track in frame_data.items():
-            if track.get("has_ball"):
-                detected_id = player_id
-                detected_team = int(track.get("team", 0))
-                break
+        # Find the CLOSEST player to the ball (not just the first has_ball)
+        if frame_num < len(ball_tracks) and ball_tracks[frame_num] and 1 in ball_tracks[frame_num]:
+            ball_bbox = ball_tracks[frame_num][1].get("bbox", [])
+            if len(ball_bbox) == 4:
+                ball_x = (ball_bbox[0] + ball_bbox[2]) / 2
+                ball_y = (ball_bbox[1] + ball_bbox[3]) / 2
+                min_dist = float("inf")
+
+                for player_id, track in frame_data.items():
+                    if not track.get("has_ball"):
+                        continue
+                    p_bbox = track.get("bbox", [])
+                    if len(p_bbox) < 4:
+                        continue
+                    px = (p_bbox[0] + p_bbox[2]) / 2
+                    py = (p_bbox[1] + p_bbox[3]) / 2
+                    dist = ((ball_x - px) ** 2 + (ball_y - py) ** 2) ** 0.5
+                    if dist < min_dist:
+                        min_dist = dist
+                        detected_id = player_id
+                        detected_team = int(track.get("team", 0))
 
         if detected_id is not None:
             loose_counter = 0
