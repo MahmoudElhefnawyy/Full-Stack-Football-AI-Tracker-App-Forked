@@ -78,9 +78,16 @@ def export_to_match_data(
         Tuple of (match_id, absolute_json_path).
     """
     # ── Step 1: Run analytics on tracking data ─────────────────────────────
+    # IMPORTANT: detect_passes() MUST run first, before assign_ball_touches().
+    # main.py already set accurate has_ball flags via PlayerBallAssigner (70px).
+    # assign_ball_touches() uses a looser 120px threshold that overwrites
+    # has_ball and introduces noise / home-team bias in pass detection.
+    passes, turnovers = detect_passes(tracks)
+
+    # Per-player touch & ball-loss stats (runs AFTER pass detection so it
+    # doesn't corrupt the has_ball flags used by build_possession_map).
     assign_ball_touches(tracks)
     determine_ball_control(tracks)
-    passes, turnovers = detect_passes(tracks)
     players = build_players(tracks, passes, turnovers)
 
     # ── Step 2: Compute possession percentages ─────────────────────────────
