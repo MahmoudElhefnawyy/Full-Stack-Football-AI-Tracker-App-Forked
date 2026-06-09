@@ -72,26 +72,32 @@ async def match_overview(match_id: str, user_id: str = Depends(get_current_user_
     return ApiResponse.ok(overview)
 
 
+@router.get("/debug/files")
+async def list_data_files():
+    """List all JSON files in the data directory (debug helper)."""
+    data_dir = Path(settings.data_dir)
+    if not data_dir.exists():
+        return JSONResponse(content={"files": [], "data_dir": str(data_dir), "exists": False})
+
+    files = []
+    for p in sorted(data_dir.glob("*.json")):
+        files.append({"name": p.name, "size_bytes": p.stat().st_size})
+
+    return JSONResponse(content={"files": files, "data_dir": str(data_dir), "exists": True})
+
+
 @router.get("/{match_id}/raw")
-async def match_raw_json(match_id: str, user_id: str = Depends(get_current_user_id)):
+async def match_raw_json(match_id: str):
     """
     Return the complete raw match JSON file produced by the AI pipeline.
-    Useful for debugging — shows every pass, turnover, position, player,
-    and metadata.total_frames so you can verify the model output.
+    Reads directly from disk — no cache, no user filter.
+    Shows every pass, turnover, position, player, and metadata.total_frames.
     """
-    # First verify the match exists and belongs to this user
-    match = next(
-        (m for m in load_matches() if m.id == match_id and m.user_id == user_id),
-        None,
-    )
-    if not match:
-        raise NotFoundException("Match", match_id)
-
-    # Read the raw JSON file from the data directory
     data_dir = Path(settings.data_dir)
     json_path = data_dir / f"{match_id}.json"
 
     if not json_path.exists():
+        # The upload endpoint may wrap data in a list — try the filename pattern
         raise NotFoundException("Raw JSON file", match_id)
 
     with json_path.open("r", encoding="utf-8") as f:

@@ -231,6 +231,16 @@ def export_to_match_data(
         {"name": "Pass Accuracy", "home": home_pass_acc, "away": away_pass_acc},
     ]
 
+    # ── Log final stats to Celery worker console for debugging ─────────────
+    total_frames = len(tracks.get("players", []))
+    print(f"\n{'='*60}")
+    print(f"  AI MODEL OUTPUT — {home_team_name} vs {away_team_name}")
+    print(f"  Total frames processed: {total_frames}")
+    print(f"{'='*60}")
+    for s in metadata_stats:
+        print(f"  {s['name']:>15s}:  Home={s['home']}  |  Away={s['away']}")
+    print(f"{'='*60}\n")
+
     # ── Step 9b: Events array (empty — pass/turnover data in separate arrays) ─
     backend_events = []
 
