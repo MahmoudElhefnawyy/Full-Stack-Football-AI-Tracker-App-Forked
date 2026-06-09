@@ -26,34 +26,42 @@ class AnalyticsService:
         home_poss = match.team_possession(match.home_team.id)
         away_poss = match.team_possession(match.away_team.id)
 
-        home_passes = [p for p in match.passes if p.team_id == match.home_team.id]
-        away_passes = [p for p in match.passes if p.team_id == match.away_team.id]
+        # Prefer pass accuracy from metadata stats (computed from actual passes/turnovers)
+        # over recomputing from the 'successful' flag which is always True in the exporter.
+        raw_stats = match.metadata.get("stats", [])
+        meta_pass_acc = next((s for s in raw_stats if s.get("name") == "Pass Accuracy"), None)
+        if meta_pass_acc:
+            home_acc = float(meta_pass_acc.get("home", 0))
+            away_acc = float(meta_pass_acc.get("away", 0))
+        else:
+            home_passes = [p for p in match.passes if p.team_id == match.home_team.id]
+            away_passes = [p for p in match.passes if p.team_id == match.away_team.id]
+            home_acc = self._pass_accuracy(home_passes)
+            away_acc = self._pass_accuracy(away_passes)
 
-        home_acc = self._pass_accuracy(home_passes)
-        away_acc = self._pass_accuracy(away_passes)
+        # Use possession from metadata if segment-based calculation gives bad results
+        meta_poss = next((s for s in raw_stats if s.get("name") == "Possession"), None)
+        if meta_poss and (home_poss == 0 or home_poss == 100):
+            home_poss = float(meta_poss.get("home", 50))
+            away_poss = float(meta_poss.get("away", 50))
 
-        # Standards stats for Comparison
-        stats_list = [
+        # Build computed stats first
+        computed_stats = [
             {"name": "Goals", "home": match.home_score, "away": match.away_score},
             {"name": "Possession", "home": home_poss, "away": away_poss},
             {"name": "Pass Accuracy", "home": home_acc, "away": away_acc},
         ]
+        computed_names = {s["name"] for s in computed_stats}
 
-        # Add more if they exist in metadata, otherwise use placeholders for visual consistency
-        raw_stats = match.metadata.get("stats", [])
+        # Append metadata stats that are NOT duplicates of computed stats
         if raw_stats:
-            stats_list.extend(raw_stats)
-        else:
-            # Default placeholders for UI consistency if no deep stats yet
-            stats_list.extend([
-                {"name": "Shots", "home": 12, "away": 8},
-                {"name": "Corner Kicks", "home": 5, "away": 3},
-                {"name": "Fouls", "home": 10, "away": 12}
-            ])
+            for s in raw_stats:
+                if s.get("name") not in computed_names:
+                    computed_stats.append(s)
 
         stats = [
             StatComparisonSchema(name=s["name"], home=s["home"], away=s["away"])
-            for s in stats_list
+            for s in computed_stats
         ]
 
         return MatchOverviewSchema(

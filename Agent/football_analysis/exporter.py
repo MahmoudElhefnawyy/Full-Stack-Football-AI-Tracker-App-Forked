@@ -153,9 +153,9 @@ def export_to_match_data(
 
     # ── Step 7: Build Possession Segments ─────────────────────────────────
     total_frames = len(tracks.get("players", []))
-    actual_duration = round(total_frames / max(fps, 1) / 60, 1)
-    team_1_mins = round(team_1_pct / 100 * actual_duration)
-    team_2_mins = round(actual_duration - team_1_mins, 1)
+    actual_duration = round(total_frames / max(fps, 1) / 60, 2)
+    team_1_mins = round(team_1_pct / 100 * actual_duration, 2)
+    team_2_mins = round(actual_duration - team_1_mins, 2)
     possession_segments = [
         {"team_id": "team_1", "start_minute": 0, "end_minute": team_1_mins},
         {"team_id": "team_2", "start_minute": team_1_mins, "end_minute": actual_duration},
