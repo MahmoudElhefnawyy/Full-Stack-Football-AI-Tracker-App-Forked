@@ -143,11 +143,11 @@ class MatchEvent(BaseModel):
 
 class PossessionSegment(BaseModel):
     team_id: str
-    start_minute: int
-    end_minute: int
+    start_minute: float
+    end_minute: float
 
     @property
-    def duration(self) -> int:
+    def duration(self) -> float:
         return self.end_minute - self.start_minute
 
 
@@ -171,7 +171,7 @@ class MatchData(BaseModel):
     away_team: TeamSummary
     home_score: int
     away_score: int
-    duration_minutes: int = 90
+    duration_minutes: float = 0
     status: str = "Full Time"
     players: list[PlayerStats] = Field(default_factory=list)
     passes: list[Pass] = Field(default_factory=list)
