@@ -1,7 +1,12 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+import json
+from pathlib import Path
 
+from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
+
+from app.core.config import settings
 from app.core.exceptions import NotFoundException
 from app.models.responses import ApiResponse
 from app.models.schemas import MatchDetailSchema, MatchOverviewSchema, MatchSummarySchema
@@ -65,3 +70,31 @@ async def match_overview(match_id: str, user_id: str = Depends(get_current_user_
 
     overview = analytics_service.match_overview(match)
     return ApiResponse.ok(overview)
+
+
+@router.get("/{match_id}/raw")
+async def match_raw_json(match_id: str, user_id: str = Depends(get_current_user_id)):
+    """
+    Return the complete raw match JSON file produced by the AI pipeline.
+    Useful for debugging — shows every pass, turnover, position, player,
+    and metadata.total_frames so you can verify the model output.
+    """
+    # First verify the match exists and belongs to this user
+    match = next(
+        (m for m in load_matches() if m.id == match_id and m.user_id == user_id),
+        None,
+    )
+    if not match:
+        raise NotFoundException("Match", match_id)
+
+    # Read the raw JSON file from the data directory
+    data_dir = Path(settings.data_dir)
+    json_path = data_dir / f"{match_id}.json"
+
+    if not json_path.exists():
+        raise NotFoundException("Raw JSON file", match_id)
+
+    with json_path.open("r", encoding="utf-8") as f:
+        raw_data = json.load(f)
+
+    return JSONResponse(content=raw_data)
