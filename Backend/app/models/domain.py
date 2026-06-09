@@ -165,6 +165,7 @@ class TeamSummary(BaseModel):
 
 class MatchData(BaseModel):
     id: str
+    user_id: str = ""
     date: str
     home_team: TeamSummary
     away_team: TeamSummary

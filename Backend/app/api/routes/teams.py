@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.core.exceptions import NotFoundException
 from app.models.responses import ApiResponse
@@ -13,6 +13,7 @@ from app.models.schemas import (
 )
 from app.services.analytics_service import analytics_service
 from app.services.json_loader import load_matches, load_players, load_teams
+from app.api.deps import get_current_user_id
 
 router = APIRouter()
 
@@ -63,12 +64,12 @@ async def team_players(team_id: str) -> ApiResponse:
 
 
 @router.get("/{team_id}/possession", response_model=ApiResponse[TeamPossessionSchema])
-async def team_possession(team_id: str) -> ApiResponse:
+async def team_possession(team_id: str, user_id: str = Depends(get_current_user_id)) -> ApiResponse:
     raw = next((t for t in load_teams() if t["id"] == team_id), None)
     if not raw:
         raise NotFoundException("Team", team_id)
 
-    matches = load_matches()
+    matches = [m for m in load_matches() if m.user_id == user_id]
     match = next(
         (m for m in matches if m.home_team.id == team_id or m.away_team.id == team_id),
         None,

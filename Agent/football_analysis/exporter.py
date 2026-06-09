@@ -59,6 +59,7 @@ def export_to_match_data(
     home_team_name: str = "Team A",
     away_team_name: str = "Team B",
     fps: float = 24.0,
+    user_id: str = "",
 ) -> tuple[str, str]:
     """
     Convert YOLO tracking results into a Backend-compatible MatchData JSON file.
@@ -230,6 +231,7 @@ def export_to_match_data(
     match_id = task_id
     match_data = {
         "id": match_id,
+        "user_id": user_id,
         "date": datetime.now().strftime("%Y-%m-%d"),
         "home_team": {"id": "team_1", "name": home_team_name, "emoji": "🏠"},
         "away_team": {"id": "team_2", "name": away_team_name, "emoji": "🚌"},

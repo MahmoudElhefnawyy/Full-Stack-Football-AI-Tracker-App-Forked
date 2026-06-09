@@ -75,7 +75,8 @@ def _download_video(filename: str) -> str:
 @worker_app.task(name="agent.analyze_video")
 def analyze_video_task(task_id: str, input_path: str,
                         home_team_name: str = "Team A",
-                        away_team_name: str = "Team B"):
+                        away_team_name: str = "Team B",
+                        user_id: str = ""):
     """
     Celery task: download the uploaded video, run YOLO analysis, export results.
 
@@ -85,8 +86,9 @@ def analyze_video_task(task_id: str, input_path: str,
                         derive the filename; not directly accessible here).
         home_team_name: Team name for team 1 (from Upload form).
         away_team_name: Team name for team 2 (from Upload form).
+        user_id:        ID of the user who uploaded the video.
     """
-    print(f"[Worker] Starting task {task_id} | {home_team_name} vs {away_team_name}")
+    print(f"[Worker] Starting task {task_id} | {home_team_name} vs {away_team_name} | user={user_id}")
     print(f"[Worker] Backend input_path (for filename reference): {input_path}")
 
     from sqlalchemy import create_engine
@@ -136,6 +138,7 @@ def analyze_video_task(task_id: str, input_path: str,
             home_team_name=home_team_name,
             away_team_name=away_team_name,
             fps=enrichment.get("fps", 24.0),
+            user_id=user_id,
         )
 
         # 5b. Export Notion-spec JSON (local audit files — not pushed to Backend)

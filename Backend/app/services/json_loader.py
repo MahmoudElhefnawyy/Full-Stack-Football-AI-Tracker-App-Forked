@@ -115,6 +115,7 @@ def load_matches() -> list[MatchData]:
 
                     match = MatchData(
                         id=item["id"],
+                        user_id=item.get("user_id", ""),
                         date=item["date"],
                         home_team=home,
                         away_team=away,

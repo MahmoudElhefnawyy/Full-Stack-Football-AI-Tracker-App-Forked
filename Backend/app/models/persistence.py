@@ -20,6 +20,7 @@ class AnalysisTask(Base):
 
     id = Column(String, primary_key=True, index=True)
     filename = Column(String, nullable=False)
+    user_id = Column(String, nullable=True, index=True)
     status = Column(Enum(TaskStatus), default=TaskStatus.PENDING)
     input_path = Column(String)
     output_path = Column(String)

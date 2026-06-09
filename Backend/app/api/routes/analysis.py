@@ -11,6 +11,7 @@ from app.core.database import get_db
 from app.models.persistence import AnalysisTask, TaskStatus
 from app.models.responses import ApiResponse
 from app.celery_app import celery_app
+from app.api.deps import get_current_user_id
 
 router = APIRouter()
 
@@ -21,6 +22,7 @@ async def upload_video(
     home_team: str = Form(default="Team A"),
     away_team: str = Form(default="Team B"),
     db: Session = Depends(get_db),
+    user_id: str = Depends(get_current_user_id),
 ) -> ApiResponse:
     """
     Upload a video file and trigger AI analysis.
@@ -47,17 +49,22 @@ async def upload_video(
     task = AnalysisTask(
         id=task_id,
         filename=file.filename,
+        user_id=user_id or None,
         status=TaskStatus.PENDING,
         input_path=str(input_path),
     )
     db.add(task)
     db.commit()
 
-    # 4. Trigger Celery Task with team names
+    # 4. Trigger Celery Task with team names and user_id
     celery_app.send_task(
         "agent.analyze_video",
         args=[task_id, str(input_path)],
-        kwargs={"home_team_name": home_team, "away_team_name": away_team},
+        kwargs={
+            "home_team_name": home_team,
+            "away_team_name": away_team,
+            "user_id": user_id,
+        },
         task_id=task_id,
     )
 

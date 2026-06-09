@@ -23,6 +23,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Import all models to ensure they are registered with Base
     import app.models.persistence # noqa
     Base.metadata.create_all(bind=engine)
+
+    # Migrate: add user_id column if it doesn't exist (for PostgreSQL)
+    from sqlalchemy import text, inspect
+    inspector = inspect(engine)
+    if "analysis_tasks" in inspector.get_table_names():
+        columns = [c["name"] for c in inspector.get_columns("analysis_tasks")]
+        if "user_id" not in columns:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE analysis_tasks ADD COLUMN user_id VARCHAR"))
+            logger.info("Migrated: added user_id column to analysis_tasks")
     
     logger.info(
         "Starting %s v%s [%s]",
