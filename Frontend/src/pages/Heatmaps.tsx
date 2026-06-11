@@ -186,12 +186,9 @@ const Heatmaps = () => {
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
+                                <div className="grid grid-cols-1 pt-4 border-t border-border">
                                     <GlassCard className="p-4">
                                         <StatCard value={`${Math.round(playerDetail.passAccuracy ?? 0)}%`} label="Pass Accuracy" />
-                                    </GlassCard>
-                                    <GlassCard className="p-4">
-                                        <StatCard value={formatDuration(playerDetail.minutesPlayed ?? 0)} label="Duration Played" />
                                     </GlassCard>
                                 </div>
                             </GlassCard>

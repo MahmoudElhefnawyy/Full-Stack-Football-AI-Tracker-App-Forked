@@ -25,8 +25,8 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     media_root: str = "app/data/media"
 
-    # Directories (single source of truth — duplicates removed)
-    data_dir: str = "app/data"
+    # Directories
+    data_dir: str = "app/data/media"
     model_dir: str = "app/models_store"
 
     # CORS — comma-separated string, parsed via property below

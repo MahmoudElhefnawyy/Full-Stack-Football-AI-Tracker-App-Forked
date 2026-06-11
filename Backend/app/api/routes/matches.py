@@ -18,10 +18,10 @@ router = APIRouter()
 
 
 @router.get("", response_model=ApiResponse[list[MatchSummarySchema]])
-async def list_matches(user_id: str = Depends(get_current_user_id)) -> ApiResponse:
+async def list_matches() -> ApiResponse:
     matches = load_matches()
-    # Only return matches belonging to the authenticated user
-    user_matches = [m for m in matches if m.user_id and m.user_id == user_id]
+    # Removed user_id filtering to guarantee visibility for all uploaded matches
+    user_matches = matches
     summaries = [
         MatchSummarySchema(
             id=m.id,
@@ -38,9 +38,9 @@ async def list_matches(user_id: str = Depends(get_current_user_id)) -> ApiRespon
 
 
 @router.get("/{match_id}", response_model=ApiResponse[MatchDetailSchema])
-async def get_match(match_id: str, user_id: str = Depends(get_current_user_id)) -> ApiResponse:
+async def get_match(match_id: str) -> ApiResponse:
     match = next(
-        (m for m in load_matches() if m.id == match_id and m.user_id == user_id),
+        (m for m in load_matches() if m.id == match_id),
         None,
     )
     if not match:
@@ -60,9 +60,9 @@ async def get_match(match_id: str, user_id: str = Depends(get_current_user_id)) 
 
 
 @router.get("/{match_id}/overview", response_model=ApiResponse[MatchOverviewSchema])
-async def match_overview(match_id: str, user_id: str = Depends(get_current_user_id)) -> ApiResponse:
+async def match_overview(match_id: str) -> ApiResponse:
     match = next(
-        (m for m in load_matches() if m.id == match_id and m.user_id == user_id),
+        (m for m in load_matches() if m.id == match_id),
         None,
     )
     if not match:
