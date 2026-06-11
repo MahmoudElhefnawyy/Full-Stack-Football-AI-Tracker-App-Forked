@@ -9,6 +9,11 @@ import GlassCard from '../components/ui/GlassCard';
 import SectionLabel from '../components/ui/SectionLabel';
 import StatCard from '../components/ui/StatCard';
 
+const formatDuration = (mins: number) => {
+    if (mins < 1) return `${Math.round(mins * 60)}s`;
+    return `${mins}'`;
+};
+
 const PlayerProfile = () => {
     const { id } = useParams<{ id: string }>();
     const [player, setPlayer] = useState<PlayerDetail | null>(null);
@@ -46,7 +51,7 @@ const PlayerProfile = () => {
     const seasonStats = [
         { icon: Target, label: 'Goals', value: String(player.goals), color: 'text-primary' },
         { icon: Activity, label: 'Assists', value: String(player.assists), color: 'text-blue-400' },
-        { icon: CheckCircle, label: 'Pass Acc.', value: `${Math.round(player.passAccuracy * 100)}%`, color: 'text-purple-400' },
+        { icon: CheckCircle, label: 'Pass Acc.', value: `${Math.round(player.passAccuracy)}%`, color: 'text-purple-400' },
     ];
 
     return (
@@ -76,7 +81,7 @@ const PlayerProfile = () => {
                                 </div>
                                 <div className="flex items-center gap-2 bg-surface-2 border border-border rounded-xl px-4 py-2">
                                     <span className="font-mono text-[9px] text-muted uppercase tracking-widest">Mins</span>
-                                    <span className="font-display font-black text-2xl text-foreground">{player.minutesPlayed}'</span>
+                                    <span className="font-display font-black text-2xl text-foreground">{formatDuration(player.minutesPlayed)}</span>
                                 </div>
                             </div>
                         </div>

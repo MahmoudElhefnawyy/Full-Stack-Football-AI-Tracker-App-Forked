@@ -51,7 +51,6 @@ def load_teams() -> list[dict]:
     return raw
 
 
-@lru_cache(maxsize=1)
 def load_players() -> list[PlayerStats]:
     """Load players.json and return typed PlayerStats list."""
     raw = _read_json("players.json")
@@ -79,7 +78,6 @@ def load_players() -> list[PlayerStats]:
     return players
 
 
-@lru_cache(maxsize=1)
 def load_matches() -> list[MatchData]:
     """Load all match-related JSON files and return consolidated MatchData list."""
     data_dir = _data_path()
@@ -157,5 +155,5 @@ def load_matches() -> list[MatchData]:
 def bust_cache() -> None:
     """Invalidate in-memory caches – called after an upload."""
     load_teams.cache_clear()
-    load_players.cache_clear()
-    load_matches.cache_clear()
+    # load_players and load_matches are no longer cached
+

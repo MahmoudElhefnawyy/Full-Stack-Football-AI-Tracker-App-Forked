@@ -223,13 +223,6 @@ def build_players(tracks, passes, turnovers):
         all_player_ids.update(frame_data.keys())
 
     for track_id in all_player_ids:
-        # Use the last frame appearance for accumulated speed/distance totals
-        track_info = {}
-        for frame_data in reversed(tracks['players']):
-            if track_id in frame_data:
-                track_info = frame_data[track_id]
-                break
-
         # Collect real-world positions (metres, 0-23.32 × 0-68)
         positions = []
         for frame_num, frame_data in enumerate(tracks['players']):
@@ -239,6 +232,17 @@ def build_players(tracks, passes, turnovers):
                     x, y = pos[0], pos[1]
                     if 0 <= x <= 105 and 0 <= y <= 68:
                         positions.append({"frame": frame_num, "x": x, "y": y})
+
+        # Skip ghost tracks that appear for less than ~1 second
+        if len(positions) < 24:
+            continue
+
+        # Use the last frame appearance for accumulated speed/distance totals
+        track_info = {}
+        for frame_data in reversed(tracks['players']):
+            if track_id in frame_data:
+                track_info = frame_data[track_id]
+                break
 
         avg_x = round(float(np.mean([p["x"] for p in positions])), 2) if positions else 0.0
         avg_y = round(float(np.mean([p["y"] for p in positions])), 2) if positions else 0.0
