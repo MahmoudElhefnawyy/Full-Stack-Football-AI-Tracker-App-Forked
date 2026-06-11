@@ -459,11 +459,7 @@ def export_to_match_data(
             "heatmap_zones": heatmap_zones.get(raw_pid, []),
             "attributes": {
                 "speed": speed_attr,
-                "dribbling": 70,
-                "shooting": 70,
                 "passing": pass_attr,
-                "defending": 70,
-                "physical": 70,
             },
         })
 

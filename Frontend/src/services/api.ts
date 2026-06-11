@@ -88,11 +88,7 @@ export interface PlayerSummary {
 
 export interface PlayerAttributes {
     speed: number;
-    dribbling: number;
-    shooting: number;
     passing: number;
-    defending: number;
-    physical: number;
 }
 
 export interface PlayerDetail extends PlayerSummary {

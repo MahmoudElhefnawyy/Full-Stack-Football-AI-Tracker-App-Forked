@@ -98,11 +98,7 @@ class AnalyticsService:
             turnover_rate=player.turnover_rate,
             attributes=PlayerAttributesSchema(
                 speed=player.attributes.speed,
-                dribbling=player.attributes.dribbling,
-                shooting=player.attributes.shooting,
                 passing=player.attributes.passing,
-                defending=player.attributes.defending,
-                physical=player.attributes.physical,
             ),
         )
 

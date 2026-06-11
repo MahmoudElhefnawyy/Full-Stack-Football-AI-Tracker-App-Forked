@@ -77,11 +77,7 @@ class Turnover(BaseModel):
 
 class PlayerAttributes(BaseModel):
     speed: int = 70
-    dribbling: int = 70
-    shooting: int = 70
     passing: int = 70
-    defending: int = 70
-    physical: int = 70
 
 
 class PlayerStats(BaseModel):

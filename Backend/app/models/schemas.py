@@ -34,11 +34,7 @@ class ApiResponse(CamelModel, Generic[T]):
 
 class PlayerAttributesSchema(CamelModel):
     speed: int
-    dribbling: int
-    shooting: int
     passing: int
-    defending: int
-    physical: int
 
 
 class PlayerSummarySchema(CamelModel):
