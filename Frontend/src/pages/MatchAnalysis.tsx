@@ -30,17 +30,33 @@ const MatchAnalysis = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!id) return;
-        Promise.all([
-            api.matches.getOverview(id),
-            api.recommendations.forMatch(id).catch(() => []),
-        ])
-            .then(([overview, recs]) => {
-                setData(overview);
-                setRecommendations(recs);
-            })
-            .catch(console.error)
-            .finally(() => setIsLoading(false));
+        const fetchAnalysis = async () => {
+            setIsLoading(true);
+            try {
+                let currentId = id;
+                if (!currentId) {
+                    const matches = await api.matches.list();
+                    if (matches.length > 0) currentId = matches[0].id;
+                }
+                
+                if (currentId) {
+                    const [overview, recs] = await Promise.all([
+                        api.matches.getOverview(currentId),
+                        api.recommendations.forMatch(currentId).catch(() => []),
+                    ]);
+                    setData(overview);
+                    setRecommendations(recs);
+                } else {
+                    setData(null);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchAnalysis();
     }, [id]);
 
     interface ChartPayload { name: string; value: number | string; fill?: string; dataKey?: string; }
