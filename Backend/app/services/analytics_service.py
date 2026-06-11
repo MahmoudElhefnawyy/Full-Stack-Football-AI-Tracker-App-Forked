@@ -107,17 +107,27 @@ class AnalyticsService:
         )
 
     def player_heatmap(self, player: PlayerStats, match: MatchData) -> PlayerHeatmapSchema:
-        raw_positions = match.positions.get(player.id, [])
-
-        if raw_positions:
-            pos_obj = Positions(positions=raw_positions)
-            points = [
-                HeatmapPointSchema(x=p["x"], y=p["y"], value=float(p["value"]))
-                for p in pos_obj.heatmap_coords()
-            ]
+        if player.heatmap_zones:
+            points = []
+            for z in player.heatmap_zones:
+                zone_id = z.get("zone_id", 0)
+                col = zone_id % 3
+                row = zone_id // 3
+                x = (col + 0.5) * (100 / 3)
+                y = (row + 0.5) * (100 / 3)
+                points.append(HeatmapPointSchema(x=x, y=y, value=z.get("percentage", 0.0)))
         else:
-            # Synthetic fallback based on player position zone
-            points = self._synthetic_heatmap(player.position)
+            raw_positions = match.positions.get(player.id, [])
+
+            if raw_positions:
+                pos_obj = Positions(positions=raw_positions)
+                points = [
+                    HeatmapPointSchema(x=p["x"], y=p["y"], value=float(p["value"]))
+                    for p in pos_obj.heatmap_coords()
+                ]
+            else:
+                # Synthetic fallback based on player position zone
+                points = self._synthetic_heatmap(player.position)
 
         return PlayerHeatmapSchema(
             player_id=player.id,

@@ -17,6 +17,7 @@ from app.models.domain import (
     PlayerAttributes,
     Position,
     PossessionSegment,
+    Recommendation,
     TeamSummary,
     Turnover,
 )
@@ -105,6 +106,7 @@ def load_matches() -> list[MatchData]:
                     passes = [Pass(**p) for p in item.get("passes", [])]
                     turnovers = [Turnover(**t) for t in item.get("turnovers", [])]
                     events = [MatchEvent(**e) for e in item.get("events", [])]
+                    recommendations = [Recommendation(**r) for r in item.get("recommendations", [])]
                     segments = [PossessionSegment(**s) for s in item.get("possession_segments", [])]
 
                     raw_positions: dict[str, list[dict]] = item.get("positions", {})
@@ -126,6 +128,7 @@ def load_matches() -> list[MatchData]:
                         passes=passes,
                         turnovers=turnovers,
                         events=events,
+                        recommendations=recommendations,
                         possession_segments=segments,
                         positions=typed_positions,
                         metadata=item.get("metadata", {}),

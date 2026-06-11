@@ -33,7 +33,12 @@ def _to_schema(rec) -> RecommendationSchema:
 @router.get("", response_model=ApiResponse[list[RecommendationSchema]])
 async def list_recommendations(user_id: str = Depends(get_current_user_id)) -> ApiResponse:
     matches = [m for m in load_matches() if m.user_id == user_id]
-    recs = recommendation_service.all_recommendations(matches)
+    recs = []
+    for m in matches:
+        if m.recommendations:
+            recs.extend(m.recommendations)
+        else:
+            recs.extend(recommendation_service.for_match(m))
     return ApiResponse.ok([_to_schema(r) for r in recs])
 
 
@@ -42,7 +47,10 @@ async def recommendations_for_match(match_id: str, user_id: str = Depends(get_cu
     match = next((m for m in load_matches() if m.id == match_id and m.user_id == user_id), None)
     if not match:
         raise NotFoundException("Match", match_id)
-    recs = recommendation_service.for_match(match)
+    if match.recommendations:
+        recs = match.recommendations
+    else:
+        recs = recommendation_service.for_match(match)
     return ApiResponse.ok([_to_schema(r) for r in recs])
 
 
@@ -56,5 +64,8 @@ async def recommendations_for_player(player_id: str, user_id: str = Depends(get_
         (m for m in matches if player.team_id in {m.home_team.id, m.away_team.id}),
         None,
     )
-    recs = recommendation_service.for_player(player, match)
+    if match and match.recommendations:
+        recs = [r for r in match.recommendations if r.player_id == player_id]
+    else:
+        recs = recommendation_service.for_player(player, match)
     return ApiResponse.ok([_to_schema(r) for r in recs])

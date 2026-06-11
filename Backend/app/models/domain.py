@@ -100,6 +100,7 @@ class PlayerStats(BaseModel):
     rating: float = 7.0
     avg_speed_kmh: float = 0.0
     distance_covered_m: float = 0.0
+    heatmap_zones: list[dict] = Field(default_factory=list)
     attributes: PlayerAttributes = Field(default_factory=PlayerAttributes)
 
     @computed_field  # type: ignore[misc]
@@ -179,6 +180,7 @@ class MatchData(BaseModel):
     positions: dict[str, list[Position]] = Field(default_factory=dict)  # player_id → positions
     possession_segments: list[PossessionSegment] = Field(default_factory=list)
     events: list[MatchEvent] = Field(default_factory=list)
+    recommendations: list[Recommendation] = Field(default_factory=list)
     metadata: dict = Field(default_factory=dict)
 
     # ── Helpers ──────────────────────────────────────────────────────────────
