@@ -7,11 +7,6 @@ import GlassCard from '../components/ui/GlassCard';
 import SectionLabel from '../components/ui/SectionLabel';
 import StatCard from '../components/ui/StatCard';
 
-const formatDuration = (mins: number) => {
-    if (mins < 1) return `${Math.round(mins * 60)}s`;
-    return `${mins}'`;
-};
-
 const Heatmaps = () => {
     const [players, setPlayers] = useState<PlayerSummary[]>([]);
     const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
