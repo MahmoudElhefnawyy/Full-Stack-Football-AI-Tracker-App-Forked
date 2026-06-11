@@ -166,8 +166,12 @@ def _compute_recommendations(
             turns = p.get("turnovers", 0)
             attempted = p.get("passes_attempted", 0)
 
+            # Check if player was tracked enough to warrant volume-based criticism
+            tracked_seconds = p.get("minutes_played", 0) * 60
+            sufficient_tracking = tracked_seconds >= (duration_seconds * 0.4)
+
             # Rule: Low distance
-            if avg_dist > 0 and dist < avg_dist * 0.5:
+            if sufficient_tracking and avg_dist > 0 and dist < avg_dist * 0.5:
                 recs.append(_make_rec(
                     scope="player", match_id=match_id, team_id=tid, player_id=pid,
                     title=f"{pname} – Low Distance",
@@ -180,7 +184,7 @@ def _compute_recommendations(
                 ))
 
             # Rule: No ball involvement
-            if passes_made == 0 and turns == 0 and dist > 5:
+            if sufficient_tracking and passes_made == 0 and turns == 0 and dist > 5:
                 recs.append(_make_rec(
                     scope="player", match_id=match_id, team_id=tid, player_id=pid,
                     title=f"{pname} – No Ball Involvement",

@@ -267,27 +267,14 @@ const Comparison = () => {
                         <GlassCard className="p-6 mb-6">
                             <p className="font-mono text-[10px] text-muted uppercase tracking-widest mb-8">Key Metrics</p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-2">
-                                <MetricBar 
-                                    label="Possession" 
-                                    leftVal={matchData.possession.home} 
-                                    rightVal={matchData.possession.away} 
-                                    leftPct={matchData.possession.home} 
-                                    showSymbol="%" 
-                                />
-                                <MetricBar 
-                                    label="Pass Accuracy" 
-                                    leftVal={matchData.passAccuracy.home} 
-                                    rightVal={matchData.passAccuracy.away} 
-                                    leftPct={matchData.passAccuracy.home} 
-                                    showSymbol="%" 
-                                />
-                                {matchData.stats.slice(0, 4).map((s, i) => (
+                                {matchData.stats.map((s, i) => (
                                     <MetricBar 
                                         key={i}
                                         label={s.name}
                                         leftVal={Number(s.home)}
                                         rightVal={Number(s.away)}
                                         leftPct={(Number(s.home) / (Number(s.home) + Number(s.away) || 1)) * 100}
+                                        showSymbol={['Possession', 'Pass Accuracy'].includes(s.name) ? '%' : ''}
                                     />
                                 ))}
                             </div>
