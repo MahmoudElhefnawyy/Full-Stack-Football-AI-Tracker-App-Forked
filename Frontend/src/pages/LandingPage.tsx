@@ -96,7 +96,7 @@ const LandingPage = () => {
                             <div className="space-y-3">
                                 <BlurIn delay={0.25}>
                                     <h1 className="font-display font-black text-[4rem] md:text-[6rem] leading-[0.95] tracking-tight text-foreground">
-                                        Goal<span className="text-primary text-glow">Sense</span><span className="text-primary">.</span>
+                                        Match<span className="text-primary text-glow">IQ</span><span className="text-primary">.</span>
                                     </h1>
                                 </BlurIn>
                                 <BlurIn delay={0.35}>
@@ -276,7 +276,7 @@ const LandingPage = () => {
                                 Ready to Elevate<br />Your <span className="text-primary">Game?</span>
                             </h2>
                             <p className="text-muted text-sm md:text-base mb-10 max-w-md mx-auto relative z-10 leading-relaxed">
-                                Join coaches and analysts already using GoalSense to gain a competitive edge.
+                                Join coaches and analysts already using MatchIQ to gain a competitive edge.
                             </p>
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10">
                                 <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>

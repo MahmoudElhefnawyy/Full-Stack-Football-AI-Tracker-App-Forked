@@ -341,7 +341,7 @@ const NotFound = () => {
             {/* Bottom mono strip */}
             <BlurIn delay={0.8} className="relative z-10 border-t border-border px-8 py-4 flex items-center justify-between">
                 <span className="font-mono text-[10px] text-muted uppercase tracking-widest">
-                    GoalSense AI — v1.0
+                    MatchIQ AI — v1.0
                 </span>
                 <span className="font-mono text-[10px] text-muted uppercase tracking-widest">
                     Error 404 / Page Not Found

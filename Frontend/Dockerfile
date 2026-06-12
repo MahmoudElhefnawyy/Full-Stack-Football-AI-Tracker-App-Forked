@@ -11,7 +11,7 @@ RUN npm ci
 COPY . .
 
 # VITE_ variables are embedded at build time — Railway passes them as build args
-ARG VITE_API_BASE_URL=https://goalsense-api.up.railway.app/api/v1
+ARG VITE_API_BASE_URL=https://matchiq-api.up.railway.app/api/v1
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 RUN npm run build

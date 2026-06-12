@@ -72,7 +72,7 @@ const RegisterPage = () => {
                 <BlurIn className="mb-10 text-center">
                     <SectionLabel number="02" path="~/auth/register" className="justify-center mb-6" />
                     <h1 className="font-display font-black text-4xl md:text-5xl text-foreground mt-4">
-                        Join <span className="text-primary">GoalSense.</span>
+                        Join <span className="text-primary">MatchIQ.</span>
                     </h1>
                     <p className="text-muted text-sm mt-3">Create your free account and start analyzing.</p>
                 </BlurIn>

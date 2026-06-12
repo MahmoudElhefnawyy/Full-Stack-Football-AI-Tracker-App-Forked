@@ -32,7 +32,7 @@ const faqCategories = [
 
 const troubleItems = [
     { icon: Video, color: 'text-blue-400', title: 'Video not processing', steps: ['Check video format (MP4, AVI, MOV)', 'Ensure file size is under 2GB', 'Try re-uploading the video', 'Contact support if issue persists'] },
-    { icon: Lock, color: 'text-yellow-400', title: "Can't log in", steps: ['Verify email and password spelling', 'Clear browser cache and cookies', 'Try password reset via email', 'Use demo@goalsense.ai if testing'] },
+    { icon: Lock, color: 'text-yellow-400', title: "Can't log in", steps: ['Verify email and password spelling', 'Clear browser cache and cookies', 'Try password reset via email', 'Use demo@matchiq.ai if testing'] },
     { icon: Activity, color: 'text-primary', title: 'Analysis not loading', steps: ['Ensure status shows "Analyzed"', 'Refresh the page', 'Check internet connection', 'Try a different browser'] },
 ];
 
@@ -182,7 +182,7 @@ const Support = () => {
                         <div className="bg-surface-2 flex items-center justify-between px-6 py-3 border-b border-border">
                             <div className="flex items-center gap-2">
                                 <Mail className="h-3.5 w-3.5 text-primary" />
-                                <span className="font-mono text-xs text-muted">support@goalsense.ai</span>
+                                <span className="font-mono text-xs text-muted">support@matchiq.ai</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />

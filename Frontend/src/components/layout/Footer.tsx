@@ -41,7 +41,7 @@ const Footer = () => {
                                 </svg>
                             </div>
                             <span className="font-display font-black text-lg uppercase tracking-tight">
-                                Goal<span className="text-primary">Sense</span>
+                                Match<span className="text-primary">IQ</span>
                             </span>
                         </div>
                         <p className="text-muted text-xs leading-relaxed max-w-[200px]">
@@ -84,7 +84,7 @@ const Footer = () => {
                 {/* Bottom bar */}
                 <div className="mt-16 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
                     <p className="font-mono text-[10px] text-muted uppercase tracking-widest">
-                        © {year} GoalSense — AI Football Analytics
+                        © {year} MatchIQ — AI Football Analytics
                     </p>
                     <div className="flex items-center gap-2 font-mono text-[10px] text-muted">
                         <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />

@@ -25,7 +25,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 # The Backend exposes its media directory via StaticFiles at:
 #   GET {BACKEND_API_URL}/api/v1/analysis/results/inputs/{filename}
 BACKEND_API_URL = os.environ.get(
-    "BACKEND_API_URL", "https://goalsense-api.up.railway.app"
+    "BACKEND_API_URL", "https://matchiq-api.up.railway.app"
 ).rstrip("/")
 
 # Local directory inside the Agent container where videos are stored

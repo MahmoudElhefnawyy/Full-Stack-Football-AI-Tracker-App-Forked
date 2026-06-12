@@ -18,10 +18,10 @@ router = APIRouter()
 
 
 @router.get("", response_model=ApiResponse[list[MatchSummarySchema]])
-async def list_matches() -> ApiResponse:
+async def list_matches(user_id: str = Depends(get_current_user_id)) -> ApiResponse:
     matches = load_matches()
-    # Removed user_id filtering to guarantee visibility for all uploaded matches
-    user_matches = matches
+    # Filter matches to only show matches explicitly uploaded by the authenticated user
+    user_matches = [m for m in matches if m.user_id == user_id]
     summaries = [
         MatchSummarySchema(
             id=m.id,

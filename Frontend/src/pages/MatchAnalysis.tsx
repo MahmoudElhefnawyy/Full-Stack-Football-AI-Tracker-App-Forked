@@ -425,7 +425,7 @@ const MatchAnalysis = () => {
             {/* PDF Footer */}
             <div className="text-center py-4 border-t border-border mt-4">
                 <p className="font-mono text-[9px] text-muted/50 uppercase tracking-widest">
-                    GoalSense AI · Powered by Computer Vision · {data.date}
+                    MatchIQ AI · Powered by Computer Vision · {data.date}
                 </p>
             </div>
         </div>
