@@ -98,7 +98,7 @@ const Navbar = () => {
                             </svg>
                         </motion.div>
                         <span className="font-display font-black text-xl uppercase tracking-tight">
-                            Goal<span className="text-primary">Sense</span>
+                            Match<span className="text-primary">IQ</span>
                         </span>
                     </Link>
 
